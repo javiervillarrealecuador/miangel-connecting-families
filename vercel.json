@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/n8n/(.*)", "destination": "http://localhost:5678/webhook/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
