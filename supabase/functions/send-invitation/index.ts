@@ -24,6 +24,8 @@ serve(async (req) => {
 
     console.log(`Enviando correo real a: ${email} vía Resend`);
     
+    const appUrl = Deno.env.get('APP_URL') || 'https://miangel-connecting-families.vercel.app'
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -40,7 +42,7 @@ serve(async (req) => {
             <p>${inviterName} te ha invitado a unirte al equipo de <strong>${childName}</strong> en mIAngel.</p>
             <p>Tu rol asignado es: <strong>${role}</strong>.</p>
             <p>Para empezar, haz clic en el siguiente enlace y crea tu cuenta:</p>
-            <a href="http://localhost:5173/?email=${email}" 
+            <a href="${appUrl}/?email=${email}" 
                style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
                Aceptar Invitación
             </a>
