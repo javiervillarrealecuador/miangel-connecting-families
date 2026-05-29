@@ -44,8 +44,13 @@ function parseSqlValues(valuesStr) {
 
 function parseSqlArray(str) {
   if (!str) return [];
-  if (str.toLowerCase() === 'null') return [];
-  const match = str.match(/ARRAY\s*\[(.*)\]/i);
+  let cleanedStr = str.trim();
+  if (cleanedStr.toLowerCase() === 'null') return [];
+  
+  // Strip trailing PostgreSQL type cast suffix like ::text[] or ::varchar[]
+  cleanedStr = cleanedStr.replace(/::[a-z0-9_\[\]]+$/i, '').trim();
+  
+  const match = cleanedStr.match(/ARRAY\s*\[(.*)\]/i);
   if (match) {
     const itemsStr = match[1];
     const items = [];
