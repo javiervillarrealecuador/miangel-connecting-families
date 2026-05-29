@@ -68,6 +68,78 @@ const contextRules = [
   {
     context: 'supermercado',
     keywords: ['supermercado', 'tienda', 'comprar', 'compra', 'carrito', 'pago', 'cajero', 'dinero', 'mall', 'centro comercial']
+  },
+  {
+    context: 'planetario',
+    keywords: ['planetario', 'proyecciones', 'domo', 'universo', 'estrella', 'constelación', 'oscuridad']
+  },
+  {
+    context: 'parque_trampolines',
+    keywords: ['trampolín', 'brincar', 'saltar', 'rebote', 'rebotar', 'gimnasio de trampolines', 'colisión']
+  },
+  {
+    context: 'autolavado',
+    keywords: ['autolavado', 'car wash', 'lavado de auto', 'rodillo', 'chorro', 'cepillo gigante']
+  },
+  {
+    context: 'jardín_botánico',
+    keywords: ['jardín botánico', 'invernadero', 'planta', 'orquídea', 'sendero', 'humedad', 'olor a planta']
+  },
+  {
+    context: 'zoológico_contacto',
+    keywords: ['zoológico de contacto', 'petting zoo', 'granja escuela', 'acariciar', 'pelaje', 'pluma', 'animal', 'establo']
+  },
+  {
+    context: 'arcade',
+    keywords: ['arcade', 'videojuego', 'salón de juego', 'maquinita', 'pantalla', 'fichas', 'consola']
+  },
+  {
+    context: 'juguetería',
+    keywords: ['juguetería', 'juguete', 'lego', 'tienda de juguete', 'estante', 'muñeca', 'carrito']
+  },
+  {
+    context: 'heladería',
+    keywords: ['heladería', 'helado', 'sabor', 'cono', 'vasito', 'chispas', 'frío', 'fresa', 'vainilla', 'chocolate']
+  },
+  {
+    context: 'tienda_cómics',
+    keywords: ['cómics', 'manga', 'juego de mesa', 'tienda de cómics', 'figuras de acción', 'cartas', 'rol']
+  },
+  {
+    context: 'evento_formal',
+    keywords: ['boda', 'bautizo', 'evento formal', 'matrimonio', 'etiqueta', 'camisa dura', 'vestido formal', 'ceremonia', 'banquete']
+  },
+  {
+    context: 'pijama_party',
+    keywords: ['pijama party', 'dormir fuera', 'pijama', 'saco de dormir', 'noche de amigos', 'conversación nocturna']
+  },
+  {
+    context: 'campamento',
+    keywords: ['campamento', 'carpa', 'tienda de campaña', 'fogata', 'bosque', 'camping', 'insectos']
+  },
+  {
+    context: 'barco',
+    keywords: ['barco', 'ferry', 'lancha', 'bote', 'mar', 'ola', 'chaleco salvavidas', 'navegación']
+  },
+  {
+    context: 'ascensor',
+    keywords: ['ascensor', 'elevador', 'subir piso', 'bajar piso', 'botón de ascensor', 'espacio cerrado', 'ingravidez']
+  },
+  {
+    context: 'escalera_mecánica',
+    keywords: ['escalera mecánica', 'escalera eléctrica', 'escalón en movimiento', 'sensor', 'coordinación visomotora']
+  },
+  {
+    context: 'piscina_pelotas',
+    keywords: ['piscina de pelotas', 'alberca de pelotas', 'pelotas de colores', 'contención táctil', 'sumergirse']
+  },
+  {
+    context: 'huerto',
+    keywords: ['huerto', 'sembrar', 'pala', 'regadera', 'semilla', 'cultivar', 'cosechar', 'tierra húmeda']
+  },
+  {
+    context: 'pista_hielo',
+    keywords: ['pista de hielo', 'patinaje sobre hielo', 'patines', 'deslizamiento', 'caídas', 'patinar']
   }
 ];
 
