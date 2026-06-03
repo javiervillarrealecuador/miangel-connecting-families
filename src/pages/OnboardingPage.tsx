@@ -127,17 +127,19 @@ export default function OnboardingPage() {
 
       if (childError) throw childError;
 
-      await supabase.from("equipo_pai").insert({
+      const { error: equipoError } = await supabase.from("equipo_pai").insert({
         persona_autismo_id: childData.id,
         familia_id: familyData.id,
         user_id: user.id,
         rol: gender || "Propietario",
         estado: "activo",
-        puede_ver_historial: true,
+        puede_ver_observaciones: true,
         puede_crear_observaciones: true,
-        puede_sugerir_objetivos: true,
+        puede_ver_objetivos: true,
         puede_editar_objetivos: true,
       });
+
+      if (equipoError) throw equipoError;
 
       toast.success("¡Perfil creado con éxito!");
       navigate("/dashboard");
