@@ -31,24 +31,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       
       setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Usuario");
 
-      // Auto-vincular invitaciones pendientes por email
-      if (user.email) {
-        const { data: pendingInvites } = await supabase
-          .from("equipo_pai")
-          .select("id")
-          .eq("invite_email", user.email)
-          .is("user_id", null);
-          
-        if (pendingInvites && pendingInvites.length > 0) {
-          for (const invite of pendingInvites) {
-            await supabase
-              .from("equipo_pai")
-              .update({ user_id: user.id, invite_status: "aceptado" })
-              .eq("id", invite.id);
-          }
-        }
-      }
-      
       const { data: teamData } = await supabase
         .from("equipo_pai")
         .select("persona_autismo_id, familia_id")
