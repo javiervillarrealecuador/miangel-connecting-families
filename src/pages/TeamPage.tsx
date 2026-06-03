@@ -105,6 +105,9 @@ export default function TeamPage() {
 
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const inviterName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Un usuario";
+
       const { data, error } = await supabase
         .from("equipo_pai")
         .insert({
@@ -124,7 +127,18 @@ export default function TeamPage() {
 
       if (error) throw error;
       
-      toast.success(`Invitación enviada a ${invEmail}`);
+      // Send email via edge function
+      const { error: fnError } = await supabase.functions.invoke('send-invitation', {
+        body: { email: invEmail, role: invRole, childName: childName, inviterName: inviterName }
+      });
+
+      if (fnError) {
+        console.error("Error invoking send-invitation:", fnError);
+        toast.error("Miembro añadido, pero hubo un error enviando el correo.");
+      } else {
+        toast.success(`Invitación enviada a ${invEmail}`);
+      }
+
       setShowInvite(false);
       loadTeam();
     } catch (error: any) {
