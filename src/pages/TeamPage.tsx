@@ -18,6 +18,7 @@ export default function TeamPage() {
   const [childId, setChildId] = useState("");
   const [showInvite, setShowInvite] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [myTeamId, setMyTeamId] = useState("");
   
   // Estados Invitación
   const [invRole, setInvRole] = useState("");
@@ -54,11 +55,12 @@ export default function TeamPage() {
 
     const { data: myTeam } = await supabase
       .from("equipo_pai")
-      .select("familia_id, persona_autismo_id, rol, personas_autismo(full_name)")
+      .select("id, familia_id, persona_autismo_id, rol, personas_autismo(full_name)")
       .eq("user_id", user.id)
       .limit(1);
 
     if (myTeam && myTeam.length > 0) {
+      setMyTeamId(myTeam[0].id);
       const fid = myTeam[0].familia_id;
       const pid = myTeam[0].persona_autismo_id;
       const role = myTeam[0].rol;
@@ -267,7 +269,7 @@ export default function TeamPage() {
                   ))}
                 </div>
 
-                {isAdmin && (
+                {isAdmin && m.id !== myTeamId && (
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest border-2" onClick={() => { setEditingMember(m); setEditPermissions(m.permissions); }}>
                       <Settings2 size={14} className="mr-2" /> Permisos
