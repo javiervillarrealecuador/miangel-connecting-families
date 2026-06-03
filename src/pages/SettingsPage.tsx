@@ -493,8 +493,8 @@ export default function SettingsPage() {
                 </AccordionTrigger>
                 <AccordionContent className="pb-8 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {renderScale("autonomia_vestido", "Vestido / Desvestido")}
-                    {renderScale("autonomia_alimentacion", "Alimentación")}
+                    {renderScale("autonomia_vestido", "Nivel de Autonomía al vestirse")}
+                    {renderScale("autonomia_alimentacion", "Nivel de Autonomía al comer")}
                     {renderScale("autonomia_higiene", "Higiene / Baño")}
                     {renderScale("autonomia_sueno", "Hábito de Sueño")}
                     {renderScale("adaptativa_transiciones", "Cambios / Transiciones")}

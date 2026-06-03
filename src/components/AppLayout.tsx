@@ -68,7 +68,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         
         setUnreadAlerts(count || 0);
       } else {
-        setChildData({ name: "Sin perfil", age: "-" });
+        setChildData({ name: "SIN PERFIL", age: "-" });
       }
     };
     loadData();
@@ -104,17 +104,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Child Profile Card */}
         <div className="px-6 mb-8">
-          <div className="bg-white/10 backdrop-blur-md rounded-[24px] p-5 border border-white/10">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner">
-                {childData.name[0]}
+          {childData.name === "SIN PERFIL" ? (
+            <Link to="/onboarding/create-child" onClick={() => setSidebarOpen(false)} className="block bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md rounded-[24px] p-5 border border-white/10 cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner">
+                  S
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-black text-sm truncate uppercase tracking-tight">SIN PERFIL</p>
+                  <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mt-0.5">Ingresa el perfil del Autista</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-black text-sm truncate uppercase tracking-tight">{childData.name}</p>
-                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{childData.age} años · PAI ACTIVO</p>
+            </Link>
+          ) : (
+            <div className="bg-white/10 backdrop-blur-md rounded-[24px] p-5 border border-white/10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner">
+                  {childData.name[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-black text-sm truncate uppercase tracking-tight">{childData.name}</p>
+                  <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{childData.age} años · PAI ACTIVO</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Navigation */}
