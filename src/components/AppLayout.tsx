@@ -117,7 +117,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </Link>
           ) : (
-            <div className="bg-white/10 backdrop-blur-md rounded-[24px] p-5 border border-white/10">
+            <Link to="/settings?tab=child" onClick={() => setSidebarOpen(false)} className="block bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md rounded-[24px] p-5 border border-white/10 cursor-pointer">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner">
                   {childData.name[0]}
@@ -127,7 +127,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{childData.age} años · PAI ACTIVO</p>
                 </div>
               </div>
-            </div>
+            </Link>
           )}
         </div>
 
