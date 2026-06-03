@@ -139,7 +139,7 @@ export default function GoalsPage() {
 
     setIsSubmitting(true);
     try {
-      const isParent = userRole === 'madre' || userRole === 'padre';
+      const isParent = userRole?.toLowerCase() === 'madre' || userRole?.toLowerCase() === 'padre';
       const { data: { user } } = await supabase.auth.getUser();
 
       const { error } = await supabase
@@ -313,6 +313,24 @@ export default function GoalsPage() {
     }
   };
 
+  const handleRejectGoal = async (goalId: string) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("pai_goals")
+        .delete()
+        .eq("id", goalId);
+
+      if (error) throw error;
+      toast.success("Objetivo rechazado y eliminado");
+      loadGoals();
+    } catch (err) {
+      toast.error("Error al rechazar el objetivo");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="animate-fade-in max-w-5xl mx-auto px-2 md:px-4">
@@ -390,14 +408,22 @@ export default function GoalsPage() {
                       <p className="text-base md:text-lg text-slate-500 font-medium leading-relaxed max-w-2xl">{goal.description}</p>
                     </div>
                     
-                    {goal.status === 'pending_approval' && (userRole === 'madre' || userRole === 'padre') && (
-                      <div className="flex gap-3 w-full md:w-auto">
+                    {goal.status === 'pending_approval' && (userRole?.toLowerCase() === 'madre' || userRole?.toLowerCase() === 'padre') && (
+                      <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
                         <Button 
-                          className="flex-1 md:flex-none h-14 px-8 rounded-2xl bg-success hover:bg-success/90 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-success/20 gap-2"
+                          className="flex-1 md:flex-none h-14 px-6 rounded-2xl bg-success hover:bg-success/90 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-success/20 gap-2"
                           onClick={() => handleApproveGoal(goal.id)}
                           disabled={isSubmitting}
                         >
-                          <CheckCircle2 size={18} /> Aprobar Meta
+                          <CheckCircle2 size={18} /> Aprobar
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="flex-1 md:flex-none h-14 px-6 rounded-2xl border-2 border-critical/20 text-critical hover:bg-critical/5 font-black text-[10px] uppercase tracking-widest gap-2"
+                          onClick={() => handleRejectGoal(goal.id)}
+                          disabled={isSubmitting}
+                        >
+                          <Trash2 size={18} /> Rechazar
                         </Button>
                       </div>
                     )}
