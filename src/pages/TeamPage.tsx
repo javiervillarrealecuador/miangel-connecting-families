@@ -67,8 +67,17 @@ export default function TeamPage() {
       // @ts-ignore
       setChildName(myTeam[0].personas_autismo?.full_name || "Hijo/a");
 
+      // Validar si es propietario real consultando la tabla familias
+      const { data: familyInfo } = await supabase
+        .from("familias")
+        .select("propietario_id")
+        .eq("id", fid)
+        .single();
+        
+      const isOwner = familyInfo?.propietario_id === user.id;
+
       const normalizedRole = role?.toLowerCase() || "";
-      setIsAdmin(normalizedRole.includes("padre") || normalizedRole.includes("madre") || normalizedRole.includes("propietario") || normalizedRole.includes("administrador"));
+      setIsAdmin(isOwner || normalizedRole.includes("padre") || normalizedRole.includes("madre") || normalizedRole.includes("propietario") || normalizedRole.includes("administrador"));
 
       const { data: teamData } = await supabase
         .from("equipo_pai")
