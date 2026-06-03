@@ -291,7 +291,7 @@ export default function DashboardPage() {
           {[
             { label: "Observaciones", val: stats.obsCount, icon: <MessageSquare size={20} />, color: "bg-blue-500", link: "/observations" },
             { label: "Objetivos Activos", val: stats.activeGoals, icon: <TrendingUp size={20} />, color: "bg-primary", link: "/goals" },
-            { label: "Próximas Citas", val: stats.upcomingEvents, icon: <Calendar size={20} />, color: "bg-secondary", link: "/activities" },
+            { label: "Próximas Citas", val: stats.upcomingEvents, icon: <Calendar size={20} />, color: "bg-secondary", link: "/activities/search" },
             { label: "Alertas Hoy", val: stats.unreadAlerts, icon: <Bell size={20} />, color: stats.unreadAlerts > 0 ? "bg-critical" : "bg-success", link: "/alerts" },
           ].map((s, i) => (
             <Link key={i} to={s.link} className="block group">
