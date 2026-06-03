@@ -264,11 +264,11 @@ export default function TeamPage() {
                       <Settings2 size={14} className="mr-2" /> Permisos
                     </Button>
                     <Button 
-                      variant="ghost" 
-                      className="h-11 px-4 rounded-xl text-destructive hover:bg-destructive/10 border-2 border-transparent"
+                      variant="outline" 
+                      className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest text-destructive border-2 border-destructive/20 hover:bg-destructive/10"
                       onClick={() => handleRemoveMember(m.id)}
                     >
-                      <X size={18} />
+                      <X size={14} className="mr-2" /> Eliminar
                     </Button>
                   </div>
                 )}
