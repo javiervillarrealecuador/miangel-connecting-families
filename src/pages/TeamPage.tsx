@@ -68,7 +68,7 @@ export default function TeamPage() {
       setChildName(myTeam[0].personas_autismo?.full_name || "Hijo/a");
 
       const normalizedRole = role?.toLowerCase() || "";
-      setIsAdmin(normalizedRole.includes("padre") || normalizedRole.includes("madre") || normalizedRole.includes("propietario"));
+      setIsAdmin(normalizedRole.includes("padre") || normalizedRole.includes("madre") || normalizedRole.includes("propietario") || normalizedRole.includes("administrador"));
 
       const { data: teamData } = await supabase
         .from("equipo_pai")

@@ -131,7 +131,7 @@ export default function OnboardingPage() {
         persona_autismo_id: childData.id,
         familia_id: familyData.id,
         user_id: user.id,
-        rol: "Propietario/Padre",
+        rol: gender || "Propietario",
         estado: "activo",
         puede_ver_historial: true,
         puede_crear_observaciones: true,
@@ -239,11 +239,20 @@ export default function OnboardingPage() {
                   {renderOptionButton(sex, "Otro", "Otro", setSex)}
                 </div>
               </div>
+
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tu relación con el niño/a</Label>
+                <div className="flex flex-wrap gap-2">
+                  {renderOptionButton(gender, "Madre", "Madre", setGender)}
+                  {renderOptionButton(gender, "Padre", "Padre", setGender)}
+                  {renderOptionButton(gender, "Administrador", "Administrador / Tutor", setGender)}
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end pt-4">
               <Button 
-                disabled={!childName || !birthDate || !sex || loading} 
+                disabled={!childName || !birthDate || !sex || !gender || loading} 
                 onClick={() => setStep(2)}
                 className="h-14 px-10 bg-primary rounded-2xl font-black text-xs uppercase tracking-widest gap-2 shadow-xl shadow-primary/20"
               >
