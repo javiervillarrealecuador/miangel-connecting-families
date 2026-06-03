@@ -547,7 +547,10 @@ export default function SettingsPage() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl">
-                      <Label className="font-bold text-xs uppercase">¿Profesor Sombra?</Label>
+                      <div className="space-y-1">
+                        <Label className="font-bold text-xs uppercase">¿Profesor Sombra?</Label>
+                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest leading-tight">Profesional que acompaña en el aula</p>
+                      </div>
                       <Switch checked={childData.profesor_sombra} onCheckedChange={v => updateChildField("profesor_sombra", v)} />
                     </div>
                     <div className="flex items-center justify-between p-4 bg-muted/20 rounded-2xl">
