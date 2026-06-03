@@ -639,58 +639,62 @@ export default function GoalsPage() {
 
         {/* Modal para Crear Nuevo Objetivo */}
         <Dialog open={showCreateGoal} onOpenChange={setShowCreateGoal}>
-          <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl rounded-[48px] bg-white">
-            <div className="bg-primary/5 p-10 md:p-12 border-b border-primary/10 text-center shrink-0">
+          <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 max-h-[95dvh] overflow-y-auto border-none shadow-2xl rounded-[32px] bg-white">
+            <div className="bg-primary/5 p-6 md:p-8 border-b border-primary/10 shrink-0">
               <DialogHeader>
-                <DialogTitle className="text-3xl font-black text-slate-900 uppercase tracking-tighter flex flex-col items-center gap-6">
-                  <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center text-primary shadow-2xl border-2 border-primary/5">
-                    <Target size={40} />
+                <div className="flex items-center gap-4 text-left">
+                  <div className="w-14 h-14 bg-white rounded-[20px] flex items-center justify-center text-primary shadow-xl border-2 border-primary/5 shrink-0">
+                    <Target size={28} />
                   </div>
-                  Nuevo Objetivo PAI
-                </DialogTitle>
-                <p className="text-sm text-slate-500 font-medium mt-4 max-w-sm mx-auto">
-                  Define una meta clara y alcanzable para el desarrollo de <span className="font-black text-primary uppercase">{childName}</span>
-                </p>
+                  <div>
+                    <DialogTitle className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                      Nuevo Objetivo PAI
+                    </DialogTitle>
+                    <p className="text-xs text-slate-500 font-medium mt-1">
+                      Para <span className="font-black text-primary uppercase">{childName}</span>
+                    </p>
+                  </div>
+                </div>
               </DialogHeader>
             </div>
 
-            <div className="p-10 md:p-12 space-y-8">
-              <div className="space-y-3">
+            <div className="p-6 md:p-8 space-y-5">
+              <div className="space-y-2">
                 <Label htmlFor="title" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Título de la Meta</Label>
                 <input
                   id="title"
                   placeholder="Ej: Saludar al entrar a un lugar"
                   value={newGoal.title}
                   onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
-                  className="w-full h-16 rounded-[24px] border-2 border-slate-100 focus:border-primary/30 focus:ring-0 outline-none px-6 text-sm font-bold placeholder:text-slate-300 transition-all"
+                  className="w-full h-14 rounded-[20px] border-2 border-slate-100 focus:border-primary/30 focus:ring-0 outline-none px-5 text-sm font-bold placeholder:text-slate-300 transition-all"
                 />
               </div>
-              <div className="space-y-3">
-                <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Descripción y Criterios de Éxito</Label>
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Descripción y Criterios</Label>
                 <Textarea
                   id="description"
                   placeholder="Describe cómo se medirá este avance..."
                   value={newGoal.description}
                   onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
-                  className="min-h-[160px] rounded-[32px] border-2 border-slate-100 focus:border-primary/30 focus:ring-0 outline-none p-6 text-sm font-medium placeholder:text-slate-300 transition-all resize-none"
+                  className="min-h-[100px] md:min-h-[120px] rounded-[24px] border-2 border-slate-100 focus:border-primary/30 focus:ring-0 outline-none p-5 text-sm font-medium placeholder:text-slate-300 transition-all resize-none"
                 />
               </div>
             </div>
 
-            <DialogFooter className="p-10 md:p-12 bg-slate-50 flex flex-col sm:flex-row gap-4">
+            <DialogFooter className="p-6 md:p-8 bg-slate-50 flex flex-row gap-3">
               <Button 
                 variant="ghost" 
-                className="h-16 flex-1 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-100" 
+                className="h-14 flex-1 rounded-[20px] font-black text-[11px] uppercase tracking-widest hover:bg-slate-100 px-0" 
                 onClick={() => setShowCreateGoal(false)}
               >
                 Cancelar
               </Button>
               <Button 
-                className="h-16 flex-[2] rounded-[24px] bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 gap-3 transition-all active:scale-95" 
+                className="h-14 flex-[2] rounded-[20px] bg-primary hover:bg-primary/90 text-white font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 gap-2 transition-all active:scale-95 px-0" 
                 onClick={handleCreateGoal}
                 disabled={isSubmitting || !newGoal.title.trim() || !newGoal.description.trim()}
               >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Crear Objetivo</>}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={18} /> Crear Objetivo</>}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -698,51 +702,54 @@ export default function GoalsPage() {
 
         {/* Modal de Reactivación Responsivo */}
         <Dialog open={showReactivate} onOpenChange={setShowReactivate}>
-          <DialogContent className="max-w-[95vw] sm:max-w-md p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl rounded-[40px] bg-white">
-            <div className="bg-primary/5 p-8 border-b border-primary/10 text-center shrink-0">
+          <DialogContent className="max-w-[95vw] sm:max-w-md p-0 max-h-[95dvh] overflow-y-auto border-none shadow-2xl rounded-[32px] bg-white">
+            <div className="bg-primary/5 p-6 md:p-8 border-b border-primary/10 shrink-0">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-black text-primary uppercase tracking-tighter flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-primary shadow-xl border-2 border-primary/10">
-                    <RotateCcw size={32} />
+                <div className="flex items-center gap-4 text-left">
+                  <div className="w-14 h-14 bg-white rounded-[20px] flex items-center justify-center text-primary shadow-xl border-2 border-primary/10 shrink-0">
+                    <RotateCcw size={28} />
                   </div>
-                  Reactivar Meta PAI
-                </DialogTitle>
-                <p className="text-sm text-slate-500 font-medium mt-4">
-                  Justifica por qué es necesario retomar: <br />
-                  <span className="font-black text-slate-900 italic">"{selectedGoal?.title}"</span>
-                </p>
+                  <div>
+                    <DialogTitle className="text-xl md:text-2xl font-black text-primary uppercase tracking-tighter">
+                      Reactivar Meta PAI
+                    </DialogTitle>
+                    <p className="text-xs text-slate-500 font-medium mt-1">
+                      <span className="font-black text-slate-900 italic line-clamp-1">"{selectedGoal?.title}"</span>
+                    </p>
+                  </div>
+                </div>
               </DialogHeader>
             </div>
 
-            <div className="p-8 space-y-6">
+            <div className="p-6 md:p-8 space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="note" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nota de Justificación Clínica</Label>
                 <Textarea
                   id="note"
-                  placeholder="Describe la regresión observada o la necesidad de reforzar este objetivo..."
+                  placeholder="Describe la regresión observada..."
                   value={reactivateNote}
                   onChange={(e) => setReactivateNote(e.target.value)}
-                  className="min-h-[140px] rounded-3xl border-2 border-slate-100 focus:border-primary/20 outline-none p-6 text-sm font-medium resize-none"
+                  className="min-h-[100px] rounded-3xl border-2 border-slate-100 focus:border-primary/20 outline-none p-5 text-sm font-medium resize-none"
                 />
               </div>
-              <div className="bg-amber-50 p-5 rounded-[24px] border-2 border-amber-100 flex gap-3">
-                <div className="p-2 h-fit bg-amber-200 rounded-lg text-amber-800"><RotateCcw size={14} /></div>
+              <div className="bg-amber-50 p-4 rounded-2xl border-2 border-amber-100 flex gap-3">
+                <div className="text-amber-800 pt-0.5"><RotateCcw size={14} /></div>
                 <p className="text-[10px] text-amber-800 leading-relaxed font-black uppercase tracking-tight">
-                  Al reactivar, el progreso bajará al 90% automáticamente para permitir nuevos registros de avance.
+                  Al reactivar, el progreso bajará al 90% para permitir nuevos registros.
                 </p>
               </div>
             </div>
 
-            <DialogFooter className="p-8 bg-slate-50 flex flex-col sm:flex-row gap-4">
-              <Button variant="ghost" className="h-14 flex-1 rounded-2xl font-black text-xs uppercase tracking-widest" onClick={() => setShowReactivate(false)}>
+            <DialogFooter className="p-6 md:p-8 bg-slate-50 flex flex-row gap-3">
+              <Button variant="ghost" className="h-14 flex-1 rounded-[20px] font-black text-[11px] uppercase tracking-widest px-0" onClick={() => setShowReactivate(false)}>
                 Cancelar
               </Button>
               <Button 
-                className="h-14 flex-[2] rounded-2xl bg-primary font-black text-xs uppercase tracking-widest shadow-2xl shadow-primary/20 gap-2" 
+                className="h-14 flex-[2] rounded-[20px] bg-primary font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 gap-2 px-0" 
                 onClick={handleReactivate}
                 disabled={isSubmitting || !reactivateNote.trim()}
               >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "Confirmar Reactivación"}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : "Confirmar"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -750,47 +757,49 @@ export default function GoalsPage() {
 
         {/* Modal para Editar Objetivo */}
         <Dialog open={showEditGoal} onOpenChange={setShowEditGoal}>
-          <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl rounded-[48px] bg-white text-slate-900">
-            <div className="bg-blue-500/5 p-10 md:p-12 border-b border-blue-500/10 text-center shrink-0">
+          <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 max-h-[95dvh] overflow-y-auto border-none shadow-2xl rounded-[32px] bg-white text-slate-900">
+            <div className="bg-blue-500/5 p-6 md:p-8 border-b border-blue-500/10 shrink-0">
               <DialogHeader>
-                <DialogTitle className="text-3xl font-black text-slate-900 uppercase tracking-tighter flex flex-col items-center gap-6">
-                  <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center text-blue-500 shadow-2xl border-2 border-blue-500/5">
-                    <Pencil size={40} />
+                <div className="flex items-center gap-4 text-left">
+                  <div className="w-14 h-14 bg-white rounded-[20px] flex items-center justify-center text-blue-500 shadow-xl border-2 border-blue-500/5 shrink-0">
+                    <Pencil size={28} />
                   </div>
-                  Editar Objetivo PAI
-                </DialogTitle>
+                  <DialogTitle className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
+                    Editar Meta
+                  </DialogTitle>
+                </div>
               </DialogHeader>
             </div>
 
-            <div className="p-10 md:p-12 space-y-8">
-              <div className="space-y-3">
+            <div className="p-6 md:p-8 space-y-5">
+              <div className="space-y-2">
                 <Label htmlFor="edit-title" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Título de la Meta</Label>
                 <input
                   id="edit-title"
                   value={goalToEdit?.title || ''}
                   onChange={(e) => setGoalToEdit({ ...goalToEdit, title: e.target.value })}
-                  className="w-full h-16 rounded-[24px] border-2 border-slate-100 focus:border-blue-500/30 focus:ring-0 outline-none px-6 text-sm font-bold transition-all text-slate-900"
+                  className="w-full h-14 rounded-[20px] border-2 border-slate-100 focus:border-blue-500/30 focus:ring-0 outline-none px-5 text-sm font-bold transition-all text-slate-900"
                 />
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Label htmlFor="edit-desc" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Descripción y Criterios</Label>
                 <Textarea
                   id="edit-desc"
                   value={goalToEdit?.description || ''}
                   onChange={(e) => setGoalToEdit({ ...goalToEdit, description: e.target.value })}
-                  className="min-h-[160px] rounded-[32px] border-2 border-slate-100 focus:border-blue-500/30 focus:ring-0 outline-none p-6 text-sm font-medium transition-all resize-none text-slate-700"
+                  className="min-h-[100px] rounded-[24px] border-2 border-slate-100 focus:border-blue-500/30 focus:ring-0 outline-none p-5 text-sm font-medium transition-all resize-none text-slate-700"
                 />
               </div>
             </div>
 
-            <DialogFooter className="p-10 md:p-12 bg-slate-50 flex flex-col sm:flex-row gap-4">
-              <Button variant="ghost" className="h-16 flex-1 rounded-[24px] font-black text-xs uppercase tracking-[0.2em]" onClick={() => setShowEditGoal(false)}>Cancelar</Button>
+            <DialogFooter className="p-6 md:p-8 bg-slate-50 flex flex-row gap-3">
+              <Button variant="ghost" className="h-14 flex-1 rounded-[20px] font-black text-[11px] uppercase tracking-widest px-0" onClick={() => setShowEditGoal(false)}>Cancelar</Button>
               <Button 
-                className="h-16 flex-[2] rounded-[24px] bg-blue-500 hover:bg-blue-600 text-white font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-blue-500/20 gap-3 transition-all active:scale-95"
+                className="h-14 flex-[2] rounded-[20px] bg-blue-500 hover:bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest shadow-xl shadow-blue-500/20 gap-2 transition-all active:scale-95 px-0"
                 onClick={handleUpdateGoal}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={20} /> Guardar Cambios</>}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={18} /> Guardar</>}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -798,23 +807,23 @@ export default function GoalsPage() {
 
         {/* Alerta de Confirmación para Eliminar */}
         <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <AlertDialogContent className="max-w-[95vw] sm:max-w-md rounded-[40px] p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl bg-white text-slate-900">
-            <div className="p-10 text-center shrink-0">
-              <div className="w-20 h-20 bg-critical/10 rounded-[32px] flex items-center justify-center text-critical mx-auto mb-6">
-                <AlertTriangle size={40} />
+          <AlertDialogContent className="max-w-[90vw] sm:max-w-sm rounded-[32px] p-0 max-h-[95dvh] overflow-y-auto border-none shadow-2xl bg-white text-slate-900">
+            <div className="p-8 pb-6 text-center shrink-0">
+              <div className="w-16 h-16 bg-critical/10 rounded-[24px] flex items-center justify-center text-critical mx-auto mb-4">
+                <AlertTriangle size={32} />
               </div>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">¿Eliminar este Objetivo?</AlertDialogTitle>
-                <AlertDialogDescription className="text-sm text-slate-500 font-medium leading-relaxed">
-                  Esta acción es irreversible. Se eliminará la meta <span className="font-bold text-slate-900">"{goalToDelete?.title}"</span> y todas las evidencias clínicas vinculadas a ella.
+                <AlertDialogTitle className="text-xl font-black text-slate-900 uppercase tracking-tighter mb-2">¿Eliminar Meta?</AlertDialogTitle>
+                <AlertDialogDescription className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Se eliminará <span className="font-bold text-slate-900">"{goalToDelete?.title}"</span> y sus evidencias. Esto no se puede deshacer.
                 </AlertDialogDescription>
               </AlertDialogHeader>
             </div>
-            <AlertDialogFooter className="p-8 bg-slate-50 gap-4">
-              <AlertDialogCancel className="h-14 flex-1 rounded-2xl border-2 border-slate-200 font-black text-[10px] uppercase tracking-widest text-slate-500">Cancelar</AlertDialogCancel>
+            <AlertDialogFooter className="p-6 bg-slate-50 flex flex-row gap-3">
+              <AlertDialogCancel className="h-12 flex-1 m-0 rounded-[20px] border-2 border-slate-200 font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-100">Cancelar</AlertDialogCancel>
               <AlertDialogAction 
                 onClick={handleDeleteGoal}
-                className="h-14 flex-1 rounded-2xl bg-critical hover:bg-critical/90 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-critical/20"
+                className="h-12 flex-1 m-0 rounded-[20px] bg-critical hover:bg-critical/90 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-critical/20"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Sí, Eliminar"}
