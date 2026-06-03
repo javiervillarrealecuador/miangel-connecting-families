@@ -88,21 +88,25 @@ export default function TeamPage() {
         .order("created_at", { ascending: true });
 
       if (teamData) {
-        setTeam(teamData.map(m => ({
-          id: m.id,
-          name: m.invite_email || "Usuario Invitado",
-          role: m.rol,
-          email: m.invite_email,
-          phone: "", 
-          status: m.invite_status || "activo",
-          specialty: m.specialty,
-          permissions: { 
-            viewObs: m.puede_ver_observaciones, 
-            createObs: m.puede_crear_observaciones, 
-            viewGoals: m.puede_ver_objetivos, 
-            editGoals: m.puede_editar_objetivos 
-          },
-        })));
+        const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || "Tú";
+        setTeam(teamData.map(m => {
+          const isMe = m.id === myTeam[0].id;
+          return {
+            id: m.id,
+            name: isMe ? `${userName} (Tú)` : (m.invite_email || "Usuario Invitado"),
+            role: m.rol,
+            email: isMe ? user.email : m.invite_email,
+            phone: "", 
+            status: isMe ? "activo" : (m.invite_status || "activo"),
+            specialty: m.specialty,
+            permissions: { 
+              viewObs: m.puede_ver_observaciones, 
+              createObs: m.puede_crear_observaciones, 
+              viewGoals: m.puede_ver_objetivos, 
+              editGoals: m.puede_editar_objetivos 
+            },
+          };
+        }));
       }
     }
     setLoading(false);
