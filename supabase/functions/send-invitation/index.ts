@@ -33,7 +33,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
       },
       body: JSON.stringify({
-        from: 'mIAngel <notificaciones@villarrealconsultora.com.ec>',
+        from: 'mIAngel <notificaciones@impuestosecuador.ec>',
         to: [email],
         subject: `Invitación para el equipo de ${childName}`,
         html: `
