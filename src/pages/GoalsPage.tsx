@@ -613,8 +613,8 @@ export default function GoalsPage() {
 
         {/* Modal para Crear Nuevo Objetivo */}
         <Dialog open={showCreateGoal} onOpenChange={setShowCreateGoal}>
-          <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 overflow-hidden border-none shadow-2xl rounded-[48px] bg-white">
-            <div className="bg-primary/5 p-10 md:p-12 border-b border-primary/10 text-center">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl rounded-[48px] bg-white">
+            <div className="bg-primary/5 p-10 md:p-12 border-b border-primary/10 text-center shrink-0">
               <DialogHeader>
                 <DialogTitle className="text-3xl font-black text-slate-900 uppercase tracking-tighter flex flex-col items-center gap-6">
                   <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center text-primary shadow-2xl border-2 border-primary/5">
@@ -672,8 +672,8 @@ export default function GoalsPage() {
 
         {/* Modal de Reactivación Responsivo */}
         <Dialog open={showReactivate} onOpenChange={setShowReactivate}>
-          <DialogContent className="max-w-[95vw] sm:max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-[40px] bg-white">
-            <div className="bg-primary/5 p-8 border-b border-primary/10 text-center">
+          <DialogContent className="max-w-[95vw] sm:max-w-md p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl rounded-[40px] bg-white">
+            <div className="bg-primary/5 p-8 border-b border-primary/10 text-center shrink-0">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black text-primary uppercase tracking-tighter flex flex-col items-center gap-4">
                   <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-primary shadow-xl border-2 border-primary/10">
@@ -724,8 +724,8 @@ export default function GoalsPage() {
 
         {/* Modal para Editar Objetivo */}
         <Dialog open={showEditGoal} onOpenChange={setShowEditGoal}>
-          <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 overflow-hidden border-none shadow-2xl rounded-[48px] bg-white text-slate-900">
-            <div className="bg-blue-500/5 p-10 md:p-12 border-b border-blue-500/10 text-center">
+          <DialogContent className="max-w-[95vw] sm:max-w-xl p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl rounded-[48px] bg-white text-slate-900">
+            <div className="bg-blue-500/5 p-10 md:p-12 border-b border-blue-500/10 text-center shrink-0">
               <DialogHeader>
                 <DialogTitle className="text-3xl font-black text-slate-900 uppercase tracking-tighter flex flex-col items-center gap-6">
                   <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center text-blue-500 shadow-2xl border-2 border-blue-500/5">
@@ -772,8 +772,8 @@ export default function GoalsPage() {
 
         {/* Alerta de Confirmación para Eliminar */}
         <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <AlertDialogContent className="max-w-[95vw] sm:max-w-md rounded-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white text-slate-900">
-            <div className="p-10 text-center">
+          <AlertDialogContent className="max-w-[95vw] sm:max-w-md rounded-[40px] p-0 max-h-[90dvh] overflow-y-auto border-none shadow-2xl bg-white text-slate-900">
+            <div className="p-10 text-center shrink-0">
               <div className="w-20 h-20 bg-critical/10 rounded-[32px] flex items-center justify-center text-critical mx-auto mb-6">
                 <AlertTriangle size={40} />
               </div>
