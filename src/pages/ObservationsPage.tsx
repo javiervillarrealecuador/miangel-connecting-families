@@ -67,7 +67,7 @@ export default function ObservationsPage() {
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [realObservations, setRealObservations] = useState<any[]>([]);
-  const [teamNames, setTeamNames] = useState<Record<string, string>>({});
+  const [teamMembersMap, setTeamMembersMap] = useState<Record<string, { name: string, role: string }>>({});
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -150,13 +150,23 @@ export default function ObservationsPage() {
           .eq("persona_autismo_id", pIds[0]);
       
         if (teamMembers) {
-          const nameMap: Record<string, string> = {};
+          const map: Record<string, { name: string, role: string }> = {};
           teamMembers.forEach(m => {
             if (m.user_id) {
-              nameMap[m.user_id] = m.invite_email?.split('@')[0] || m.rol || "Miembro";
+              map[m.user_id] = {
+                name: m.invite_email?.split('@')[0] || "Usuario",
+                role: m.rol || "Miembro"
+              };
             }
           });
-          setTeamNames(nameMap);
+          
+          // Asegurar que el usuario actual use su nombre completo
+          const currentUserName = user.user_metadata?.full_name || user.email?.split('@')[0] || "Tú";
+          const currentUserTeamData = teamMembers.find(m => m.user_id === user.id);
+          const currentUserRole = currentUserTeamData?.rol || "Padre";
+          map[user.id] = { name: currentUserName, role: currentUserRole };
+          
+          setTeamMembersMap(map);
         }
       }
     }
@@ -241,8 +251,10 @@ export default function ObservationsPage() {
                 const impactValNum = impactVal !== undefined && impactVal !== null ? Number(impactVal) : null;
                 const displayImpact = impactValNum !== null ? (isNegative ? `-${Math.abs(impactValNum)}%` : `+${impactValNum}%`) : null;
                 
-                const authorName = obs.registrado_por ? teamNames[obs.registrado_por] : null;
-                const displayAuthor = authorName ? `${authorName} (${obs.rol_registrador || "MEMBER"})` : (obs.rol_registrador || "MEMBER");
+                const memberInfo = obs.registrado_por ? teamMembersMap[obs.registrado_por] : null;
+                const authorName = memberInfo?.name || "Usuario";
+                const authorRole = obs.rol_registrador || memberInfo?.role || "Miembro";
+                const displayAuthor = `${authorName} (${authorRole})`;
 
                 return (
                   <div key={obs.id} className="relative bg-white border-2 border-slate-100 rounded-[40px] p-8 md:p-10 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/20 transition-all group overflow-hidden">
