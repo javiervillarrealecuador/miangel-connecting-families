@@ -81,14 +81,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#f8fafc]">
+    <div className="min-h-[100dvh] flex bg-[#f8fafc]">
       {/* Mobile Overlay con Blur */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-300" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar Premium */}
-      <aside className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-72 bg-primary flex flex-col transition-all duration-500 ease-in-out shadow-2xl ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
+      <aside className={`fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-72 bg-primary flex flex-col transition-all duration-500 ease-in-out shadow-2xl ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
         {/* Logo & Close */}
         <div className="p-8 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-3 group" onClick={() => setSidebarOpen(false)}>
@@ -132,7 +132,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 space-y-3 overflow-y-auto custom-scrollbar py-4">
+        <nav className="flex-1 px-4 space-y-3 overflow-y-auto py-4 min-h-0">
           {navItems.map((item) => {
             const active = location.pathname === item.path || (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
             return (
