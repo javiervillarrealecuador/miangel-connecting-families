@@ -11,25 +11,12 @@ export function ProtectedRoute() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       
-      // Auto-vincular invitaciones pendientes por email antes de cargar la app
+      // Auto-vincular invitaciones pendientes por email usando Edge Function (evita problemas de RLS y mayúsculas)
       if (session?.user?.email) {
         try {
-          const { data: pendingInvites } = await supabase
-            .from("equipo_pai")
-            .select("id")
-            .eq("invite_email", session.user.email)
-            .is("user_id", null);
-            
-          if (pendingInvites && pendingInvites.length > 0) {
-            for (const invite of pendingInvites) {
-              await supabase
-                .from("equipo_pai")
-                .update({ user_id: session.user.id, invite_status: "aceptado" })
-                .eq("id", invite.id);
-            }
-          }
+          await supabase.functions.invoke('link-invite');
         } catch (e) {
-          console.error("Error auto-linking invites", e);
+          console.error("Error auto-linking invites via Edge Function", e);
         }
       }
       
