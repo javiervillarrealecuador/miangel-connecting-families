@@ -250,27 +250,28 @@ export default function TeamPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pb-20">
             {team.map(m => (
-              <div key={m.id} className="bg-card border-2 rounded-[32px] p-6 md:p-8 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group">
+              <div key={m.id} className="bg-card border-2 rounded-[32px] p-5 md:p-6 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all group flex flex-col h-full">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl border border-primary/20">
+                  <div className="w-14 h-14 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl border border-primary/20">
                     {m.name?.[0] || m.email?.[0] || "?"}
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-black text-foreground text-lg tracking-tight truncate leading-none mb-1">{m.name || "Sin nombre"}</h3>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-black text-foreground text-lg tracking-tight leading-tight mb-1 break-words">{m.name || "Sin nombre"}</h3>
                     <p className={`inline-block px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${statusColors[m.status]}`}>
                       {m.status === "active" || m.status === "activo" ? "✓ Activo" : "⏳ Pendiente"}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6 bg-muted/20 p-4 rounded-2xl">
+                <div className="space-y-3 mb-6 bg-muted/20 p-4 rounded-2xl flex-1">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <Briefcase size={14} className="text-primary" />
-                    <span className="font-bold text-foreground">{m.role}</span> {m.specialty && `· ${m.specialty}`}
+                    <Briefcase size={14} className="text-primary shrink-0" />
+                    <span className="font-bold text-foreground break-words">{m.role}</span> {m.specialty && `· ${m.specialty}`}
                   </div>
                   {m.email && (
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground truncate">
-                      <Mail size={14} className="text-primary" /> {m.email}
+                    <div className="flex items-start gap-2 text-xs font-medium text-muted-foreground">
+                      <Mail size={14} className="text-primary shrink-0 mt-0.5" /> 
+                      <span className="break-all leading-tight">{m.email}</span>
                     </div>
                   )}
                 </div>
