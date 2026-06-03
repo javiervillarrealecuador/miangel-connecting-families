@@ -91,14 +91,30 @@ export default function TeamPage() {
         const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || "Tú";
         setTeam(teamData.map(m => {
           const isMe = m.id === myTeam[0].id;
+          const isThisMemberTheOwner = familyInfo?.propietario_id && m.user_id === familyInfo.propietario_id;
+
+          let name = m.invite_email || "Usuario Invitado";
+          let email = m.invite_email;
+          let status = m.invite_status || "activo";
+
+          if (isMe) {
+            name = `${userName} (Tú)`;
+            email = user.email;
+            status = "activo";
+          } else if (isThisMemberTheOwner) {
+            name = "Propietario de la Familia";
+            status = "activo"; // El propietario siempre está activo
+          }
+
           return {
             id: m.id,
-            name: isMe ? `${userName} (Tú)` : (m.invite_email || "Usuario Invitado"),
+            name: name,
             role: m.rol,
-            email: isMe ? user.email : m.invite_email,
+            email: email,
             phone: "", 
-            status: isMe ? "activo" : (m.invite_status || "activo"),
+            status: status,
             specialty: m.specialty,
+            isOwner: isThisMemberTheOwner,
             permissions: { 
               viewObs: m.puede_ver_observaciones, 
               createObs: m.puede_crear_observaciones, 
@@ -273,7 +289,7 @@ export default function TeamPage() {
                   ))}
                 </div>
 
-                {isAdmin && m.id !== myTeamId && (
+                {isAdmin && m.id !== myTeamId && !m.isOwner && (
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest border-2" onClick={() => { setEditingMember(m); setEditPermissions(m.permissions); }}>
                       <Settings2 size={14} className="mr-2" /> Permisos
