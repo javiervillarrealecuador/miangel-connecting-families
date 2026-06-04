@@ -119,33 +119,51 @@ export default function ReportsPage() {
         `- [${new Date(o.fecha_observacion).toLocaleDateString()}] Tipo: ${o.tipo}, Contexto: ${o.contexto || 'General'}, Intensidad: ${o.intensidad_escala || o.intensidad || 3}/5, Descripción: ${o.descripcion_texto}`
       ).join("\n");
 
-      // 3. Configurar Gemini
-      const apiKey = import.meta.env.VITE_GOOGLE_AI_KEY;
+      // 3. Configurar DeepSeek API
+      const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
       if (!apiKey) {
-        throw new Error("No se encontró la clave de API VITE_GOOGLE_AI_KEY en el entorno.");
+        throw new Error("No se encontró la clave VITE_DEEPSEEK_API_KEY. Por favor agrégala a tus variables de entorno (.env).");
       }
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `Eres un psicólogo clínico experto en autismo (TEA) para la plataforma mIAngel.
 Analiza las siguientes observaciones recientes del niño/a:
 ${formattedObs}
 
 Genera un análisis clínico estructurado para el Plan de Acción Integral (PAI) que ayude a los terapeutas y padres.
-Devuelve los datos estrictamente como un objeto JSON plano, sin usar bloques de código con triple comilla \`\`\`json, sin comentarios y sin texto explicativo alrededor.
+IMPORTANTE: Debes responder ÚNICAMENTE con un objeto JSON válido, sin formato markdown, sin comillas triples y sin texto adicional.
 
-El formato del JSON debe ser exactamente:
+El formato del JSON debe ser exactamente este:
 {
   "resumen_texto": "Escribe un resumen clínico consolidado de las observaciones (máximo 3 párrafos). Debe ser empático, detallado y profesional.",
   "tendencia": "Estable o Progreso o Regresión",
   "cambios_comportamiento": "Cambios clave observados en su conducta.",
   "recomendaciones_futuro": "Sugerencias prácticas para trabajar en el aula o en el hogar."
-}
-`;
+}`;
 
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      const response = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            { role: "system", content: "Eres un sistema experto que siempre responde en formato JSON estricto." },
+            { role: "user", content: prompt }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.3
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(`Error en la API de DeepSeek (${response.status}): ${errData.error?.message || response.statusText}`);
+      }
+
+      const apiData = await response.json();
+      const responseText = apiData.choices[0].message.content;
       const cleanJsonText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
       const parsedData = JSON.parse(cleanJsonText);
 
