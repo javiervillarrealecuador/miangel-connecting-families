@@ -12,7 +12,9 @@ import {
   Filter,
   CheckSquare,
   AlertTriangle,
-  Info
+  Info,
+  Loader2,
+  X
 } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { toast } from "sonner";
@@ -37,6 +39,13 @@ export default function DashboardPage() {
   const [childId, setChildId] = useState("");
   const [childName, setChildName] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Estados para Modal de Equipo
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [messageText, setMessageText] = useState("");
+  const [sendingMsg, setSendingMsg] = useState(false);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -501,7 +510,7 @@ export default function DashboardPage() {
               <p className="text-xs text-white/80 font-medium mb-6">El Plan de Acción Integral tiene {stats.activeGoals} objetivos en curso para {childName}.</p>
               <Link to="/goals">
                 <Button className="w-full bg-white text-primary hover:bg-white/90 rounded-2xl h-12 font-black text-[10px] uppercase tracking-widest shadow-xl">
-                  Gestionar Metas
+                  Gestionar Objetivos
                 </Button>
               </Link>
             </div>
@@ -514,16 +523,60 @@ export default function DashboardPage() {
                     <CheckSquare size={18} className="text-secondary" /> Guías de Apoyo
                   </Button>
                 </Link>
-                <Link to="/team">
-                  <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-xs font-bold gap-3 px-4">
-                    <AlertCircle size={18} className="text-blue-500" /> Consultar Equipo
-                  </Button>
-                </Link>
+                <Button variant="ghost" onClick={handleOpenTeamModal} className="w-full justify-start h-12 rounded-xl text-xs font-bold gap-3 px-4">
+                  <MessageSquare size={18} className="text-blue-500" /> Consultar Equipo
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {showTeamModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-card w-full max-w-md rounded-[32px] p-8 shadow-2xl relative">
+            <button onClick={() => setShowTeamModal(false)} className="absolute top-6 right-6 text-muted-foreground hover:text-foreground">
+              <X size={24} />
+            </button>
+            <h2 className="text-xl font-black mb-6 tracking-tight text-foreground">Mensaje Interno</h2>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="text-[10px] font-black text-muted-foreground mb-2 block uppercase tracking-widest">Destinatario</label>
+                <select 
+                  className="w-full bg-muted/30 rounded-2xl h-14 px-4 outline-none border-2 border-transparent focus:border-primary text-sm font-bold text-foreground"
+                  value={selectedMemberId}
+                  onChange={(e) => setSelectedMemberId(e.target.value)}
+                >
+                  <option value="">Selecciona un miembro...</option>
+                  {teamMembers.map(m => (
+                    <option key={m.user_id} value={m.user_id}>{m.user_email?.split('@')[0]} ({m.rol?.replace('_', ' ')})</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="text-[10px] font-black text-muted-foreground mb-2 block uppercase tracking-widest">Mensaje</label>
+                <textarea 
+                  className="w-full bg-muted/30 rounded-2xl p-4 outline-none border-2 border-transparent focus:border-primary text-sm font-medium min-h-[140px] resize-none text-foreground"
+                  placeholder="Escribe tu mensaje aquí..."
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                />
+              </div>
+
+              <Button 
+                className="w-full h-14 rounded-2xl bg-primary shadow-xl shadow-primary/20 font-black text-xs uppercase tracking-widest"
+                onClick={handleSendMessage}
+                disabled={sendingMsg}
+              >
+                {sendingMsg ? <Loader2 className="animate-spin mr-2" size={18} /> : <MessageSquare className="mr-2" size={18} />}
+                Enviar Notificación
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
