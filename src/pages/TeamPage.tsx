@@ -291,16 +291,16 @@ export default function TeamPage() {
                 </div>
 
                 {isAdmin && m.id !== myTeamId && !m.isOwner && (
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest border-2" onClick={() => { setEditingMember(m); setEditPermissions(m.permissions); }}>
-                      <Settings2 size={14} className="mr-2" /> Permisos
+                  <div className="flex gap-2 mt-auto">
+                    <Button variant="outline" className="flex-1 h-11 px-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider border-2 overflow-hidden" onClick={() => { setEditingMember(m); setEditPermissions(m.permissions); }}>
+                      <Settings2 size={14} className="mr-1.5 shrink-0" /> <span className="truncate">Permisos</span>
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest text-destructive border-2 border-destructive/20 hover:bg-destructive/10"
+                      className="flex-1 h-11 px-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-destructive border-2 border-destructive/20 hover:bg-destructive/10 overflow-hidden"
                       onClick={() => handleRemoveMember(m.id)}
                     >
-                      <X size={14} className="mr-2" /> Eliminar
+                      <X size={14} className="mr-1.5 shrink-0" /> <span className="truncate">Eliminar</span>
                     </Button>
                   </div>
                 )}
