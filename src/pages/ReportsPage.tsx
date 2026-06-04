@@ -169,6 +169,8 @@ El formato del JSON debe ser exactamente este:
 
       const finalTexto = `${parsedData.resumen_texto}\n\n**Tendencia Detectada:** ${parsedData.tendencia || "Estable"}\n\n**Cambios Observados:**\n${parsedData.cambios_comportamiento || "No detectados"}\n\n**Recomendaciones:**\n${parsedData.recomendaciones_futuro || "Ninguna"}`;
 
+      const { data: { user } } = await supabase.auth.getUser();
+
       // 4. Guardar en resumenes_consolidados
       const { error: insertErr } = await supabase
         .from("resumenes_consolidados")
@@ -177,7 +179,7 @@ El formato del JSON debe ser exactamente este:
           familia_id: childData.familia_id,
           tipo_resumen: "semanal",
           resumen_texto: finalTexto,
-          generado_por: "agente_ia"
+          generado_por: user?.id || "agente_ia"
         });
 
       if (insertErr) throw insertErr;
