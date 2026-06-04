@@ -167,6 +167,8 @@ El formato del JSON debe ser exactamente este:
       const cleanJsonText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
       const parsedData = JSON.parse(cleanJsonText);
 
+      const finalTexto = `${parsedData.resumen_texto}\n\n**Tendencia Detectada:** ${parsedData.tendencia || "Estable"}\n\n**Cambios Observados:**\n${parsedData.cambios_comportamiento || "No detectados"}\n\n**Recomendaciones:**\n${parsedData.recomendaciones_futuro || "Ninguna"}`;
+
       // 4. Guardar en resumenes_consolidados
       const { error: insertErr } = await supabase
         .from("resumenes_consolidados")
@@ -174,10 +176,7 @@ El formato del JSON debe ser exactamente este:
           persona_autismo_id: childData.id,
           familia_id: childData.familia_id,
           tipo_resumen: "semanal",
-          resumen_texto: parsedData.resumen_texto,
-          tendencia: parsedData.tendencia || "Estable",
-          cambios_comportamiento: parsedData.cambios_comportamiento,
-          recomendaciones_futuro: parsedData.recomendaciones_futuro,
+          resumen_texto: finalTexto,
           generado_por: "agente_ia"
         });
 
