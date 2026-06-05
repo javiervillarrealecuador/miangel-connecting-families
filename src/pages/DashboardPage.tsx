@@ -248,6 +248,43 @@ export default function DashboardPage() {
     window.location.href = "/alerts";
   };
 
+  const handleOpenTeamModal = async () => {
+    setShowTeamModal(true);
+    if (familiaId) {
+      const { data } = await supabase
+        .from("equipo_pai")
+        .select("*")
+        .eq("familia_id", familiaId)
+        .neq("user_id", currentUserId);
+      if (data) setTeamMembers(data);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedMemberId || !messageText) {
+      toast.error("Completa todos los campos");
+      return;
+    }
+    setSendingMsg(true);
+    try {
+      await supabase.from("alertas").insert({
+        persona_autismo_id: childId,
+        familia_id: familiaId,
+        tipo: "social",
+        severidad: "baja",
+        descripcion: `Mensaje de equipo: ${messageText}`,
+        // @ts-ignore
+        registrado_por: currentUserId
+      });
+      toast.success("Mensaje enviado");
+      setShowTeamModal(false);
+      setMessageText("");
+    } catch(e) {
+      toast.error("Error al enviar mensaje");
+    }
+    setSendingMsg(false);
+  };
+
   const severityIcon = (s: string, read: boolean) => {
     if (read) return <CheckCircle2 className="text-green-500 shrink-0" size={18} />;
     if (s === "critica") return <AlertTriangle className="text-critical shrink-0" size={18} />;
