@@ -304,6 +304,33 @@ El formato del JSON debe ser exactamente este:
                 <p className="text-xs italic text-slate-400">No hay observaciones registradas recientemente.</p>
               )}
             </div>
+          <section>
+            <SectionHeader n={5} title="Análisis Clínico Inteligente (mIAngel)" />
+            <div className="space-y-4">
+              {summaries.length > 0 ? (
+                summaries.slice(0, 1).map((sum, i) => (
+                  <div key={i} className="border-2 border-primary/20 rounded-2xl p-6 bg-primary/5">
+                    <div className="flex justify-between items-center mb-4 border-b border-primary/10 pb-2">
+                      <span className="font-black text-[10px] uppercase text-primary tracking-widest">
+                        Resumen Consolidado
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500">
+                        {new Date(sum.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="prose prose-sm max-w-none text-slate-800 whitespace-pre-wrap leading-relaxed font-medium">
+                      {sum.resumen_texto}
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-primary/10">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 mr-2">Tendencia:</span>
+                      <span className="text-[10px] font-black uppercase text-success">{sum.tendencia || 'Estable'}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs italic text-slate-400">No hay análisis generados recientemente.</p>
+              )}
+            </div>
           </section>
         </div>
       </div>
@@ -339,9 +366,19 @@ El formato del JSON debe ser exactamente este:
                   <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                     <Sparkles size={64} />
                   </div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <Badge className="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-3 py-1">Consolidado mIAngel</Badge>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(sum.created_at).toLocaleDateString()}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-3 py-1">Consolidado mIAngel</Badge>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(sum.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 rounded-xl border-primary/20 hover:bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest gap-2" 
+                      onClick={() => window.print()}
+                    >
+                      <Printer size={14} /> PDF
+                    </Button>
                   </div>
                   <h3 className="text-xl font-black text-foreground tracking-tight mb-4">Resumen Clínico Inteligente</h3>
                   <div className="prose prose-sm max-w-none text-foreground/80 font-medium leading-relaxed">
