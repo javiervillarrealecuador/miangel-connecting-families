@@ -267,19 +267,23 @@ export default function DashboardPage() {
     }
     setSendingMsg(true);
     try {
-      await supabase.from("alertas").insert({
+      const { error } = await supabase.from("alertas").insert({
         persona_autismo_id: childId,
         familia_id: familiaId,
-        tipo: "social",
+        tipo: "sugerencia_estrategia", // Debe cumplir con el constraint CHECK
         severidad: "baja",
         descripcion: `Mensaje de equipo: ${messageText}`,
-        // @ts-ignore
-        registrado_por: currentUserId
+        creada_por: currentUserId,
+        enviado_a: [selectedMemberId]
       });
+      
+      if (error) throw error;
+      
       toast.success("Mensaje enviado");
       setShowTeamModal(false);
       setMessageText("");
-    } catch(e) {
+    } catch(e: any) {
+      console.error(e);
       toast.error("Error al enviar mensaje");
     }
     setSendingMsg(false);
