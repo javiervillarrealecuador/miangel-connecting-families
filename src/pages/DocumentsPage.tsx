@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Upload, FileText, Trash2, Loader2, BookOpen, Search, Filter, PlayCircle, ExternalLink, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

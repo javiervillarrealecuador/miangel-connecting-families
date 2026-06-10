@@ -15,6 +15,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { toast } from "sonner";
+import { useLocation } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
 import { 
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 
 export default function SettingsPage() {
+  const location = useLocation();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userPhone, setUserPhone] = useState("");
@@ -118,16 +120,21 @@ export default function SettingsPage() {
   const [minSeverity, setMinSeverity] = useState([2]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    loadProfile();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
     const tabParam = params.get("tab");
     if (tabParam === "user" || tabParam === "alerts") {
       setActiveTab(tabParam);
       if (tabParam === "user") {
         toast.info("Por favor, establece tu nueva contraseña aquí.");
       }
+    } else {
+      setActiveTab("child");
     }
-    loadProfile();
-  }, []);
+  }, [location.search]);
 
   const loadProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();

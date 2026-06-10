@@ -161,15 +161,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* User Profile Footer */}
         <div className="p-6 mt-auto border-t border-white/10 bg-black/10">
           <div className="flex items-center gap-4 bg-white/5 p-4 rounded-3xl border border-white/10">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white text-xs font-black border border-white/20 shadow-inner">
-              {userName[0]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-[10px] font-black uppercase tracking-widest truncate">{userName}</p>
-              <button onClick={handleLogout} className="text-white/40 hover:text-white text-[9px] font-black uppercase tracking-tighter flex items-center gap-1.5 mt-1 transition-colors">
-                <LogOut size={12} /> Salir del Sistema
-              </button>
-            </div>
+            <Link 
+              to="/settings?tab=user" 
+              onClick={() => setSidebarOpen(false)} 
+              className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white text-xs font-black border border-white/20 shadow-inner shrink-0">
+                {userName[0]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-[10px] font-black uppercase tracking-widest truncate">{userName}</p>
+                <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest leading-none mt-0.5">Mi Cuenta</p>
+              </div>
+            </Link>
+            <button 
+              onClick={handleLogout} 
+              className="text-white/40 hover:text-white text-[9px] font-black uppercase tracking-tighter flex items-center gap-1.5 transition-colors shrink-0"
+              title="Salir del Sistema"
+            >
+              <LogOut size={14} />
+            </button>
           </div>
         </div>
       </aside>
@@ -207,7 +218,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
             
             <div 
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate("/settings?tab=user")}
               className="flex items-center gap-4 p-2 md:p-2.5 rounded-2xl bg-white border-2 border-slate-100 hover:border-primary/20 hover:shadow-xl hover:shadow-slate-200/40 cursor-pointer transition-all group"
             >
               <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-primary flex items-center justify-center text-white text-xs font-black shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
