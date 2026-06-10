@@ -33,4 +33,5 @@ dist-ssr
 # Agent metadata
 .claude/
 
-
+# Scratch directory
+scratch/

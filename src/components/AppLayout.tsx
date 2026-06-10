@@ -62,7 +62,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         // Cargar alertas no leídas
         const { count } = await supabase
           .from("alertas")
-          .select("*", { count: 'exact', head: true })
+          .select("id", { count: 'exact', head: true })
           .eq("familia_id", teamData[0].familia_id)
           .eq("leida", false);
         

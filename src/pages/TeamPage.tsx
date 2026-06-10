@@ -83,7 +83,7 @@ export default function TeamPage() {
 
       const { data: teamData } = await supabase
         .from("equipo_pai")
-        .select("*")
+        .select("id, user_id, familia_id, persona_autismo_id, rol, specialty, invite_email, invite_status, puede_ver_observaciones, puede_crear_observaciones, puede_ver_objetivos, puede_editar_objetivos")
         .eq("familia_id", fid)
         .order("created_at", { ascending: true });
 
@@ -263,7 +263,7 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6 bg-muted/20 p-4 rounded-2xl flex-1">
+                <div className="space-y-3.5 mb-6 pl-4 border-l-2 border-primary/20 flex-1">
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                     <Briefcase size={14} className="text-primary shrink-0" />
                     <span className="font-bold text-foreground break-words">{m.role}</span> {m.specialty && `· ${m.specialty}`}
@@ -276,16 +276,20 @@ export default function TeamPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-6">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-6 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-t border-slate-100 pt-4">
                   {[
                     { label: "Ver Obs.", active: m.permissions?.viewObs },
                     { label: "Crear Obs.", active: m.permissions?.createObs },
                     { label: "Ver Metas", active: m.permissions?.viewGoals },
                     { label: "Ed. Metas", active: m.permissions?.editGoals },
                   ].map((p, i) => (
-                    <div key={i} className={`flex items-center gap-1.5 p-2 rounded-xl border text-[9px] font-black uppercase tracking-tighter ${p.active ? 'bg-success/5 border-success/10 text-success' : 'bg-muted/50 border-transparent text-muted-foreground'}`}>
-                      {p.active ? <Check size={10} strokeWidth={3} /> : <X size={10} strokeWidth={3} />}
-                      {p.label}
+                    <div key={i} className="flex items-center gap-2">
+                      {p.active ? (
+                        <Check size={12} className="text-success shrink-0" strokeWidth={3} />
+                      ) : (
+                        <X size={12} className="text-slate-350 shrink-0" strokeWidth={3} />
+                      )}
+                      <span className={p.active ? "text-slate-700" : "text-slate-400 font-medium"}>{p.label}</span>
                     </div>
                   ))}
                 </div>

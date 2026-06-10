@@ -21,7 +21,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function ActivitiesPage() {
   // -------------------------------------------------------------------
@@ -78,7 +77,7 @@ export default function ActivitiesPage() {
   const fetchActiveGoals = async (cid: string) => {
     const { data } = await supabase
       .from("pai_goals")
-      .select("*")
+      .select("id, title, area, progress, familia_id")
       .eq("persona_autismo_id", cid)
       .in("status", ["activo", "in_progress"]);
     setActiveGoals(data || []);
@@ -238,17 +237,15 @@ export default function ActivitiesPage() {
     }
     setLoading(true);
     try {
-      const apiKey = import.meta.env.VITE_GOOGLE_AI_KEY;
-      if (!apiKey) throw new Error("Clave API no configurada");
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const esSinObjetivo = selectedGoal._sinObjetivo;
-      const prompt = `Eres un terapeuta ocupacional y psicólogo clínico experto en autismo (TEA) para la aplicación mIAngel.
-Contexto/Lugar: "${query}"\n${esSinObjetivo ? "Modo: CONTROL DE SITUACIÓN. No hay objetivo PAI específico." : `Objetivo PAI: "${selectedGoal.title}"`}\nGenera una lista de EXACTAMENTE 3 actividades con campo "pasos" como array de pasos claros.\nDevuelve JSON sin markdown:`;
-      const result = await model.generateContent(prompt);
-      const txt = result.response.text().replace(/```json/g, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(txt);
-      const formatted = parseActivities(parsed);
+      const { data, error } = await supabase.functions.invoke("generate-activities", {
+        body: {
+          query,
+          goalTitle: selectedGoal.title,
+          esSinObjetivo: !!selectedGoal._sinObjetivo,
+        },
+      });
+      if (error) throw error;
+      const formatted = parseActivities(data);
       setResults(formatted);
       toast.success("Actividades generadas con Gemini");
     } catch (e: any) {
@@ -304,7 +301,7 @@ Contexto/Lugar: "${query}"\n${esSinObjetivo ? "Modo: CONTROL DE SITUACIÓN. No h
       rol_registrador: userRole || "Padre",
       sentimiento: rating[0] >= 4 ? "alegre" : rating[0] >= 3 ? "calmado" : "ansioso",
     };
-    const { data: obsData, error: obsErr } = await supabase.from("observaciones").insert(obsPayload).select().single();
+    const { data: obsData, error: obsErr } = await supabase.from("observaciones").insert(obsPayload).select("id").single();
     if (obsErr) {
       toast.warning("Retroalimentación guardada, pero fallo crear observación");
     } else if (selectedGoal) {
@@ -547,33 +544,33 @@ Contexto/Lugar: "${query}"\n${esSinObjetivo ? "Modo: CONTROL DE SITUACIÓN. No h
                       <p className="text-sm text-foreground/75 leading-relaxed mb-4">{act.descripcion}</p>
                       {/* Pasos */}
                       {act.pasos && act.pasos.length > 0 && (
-                        <div className="space-y-2 mb-4">
-                          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-primary/60 mb-2">📋 Pasos</p>
+                        <div className="space-y-3 mb-4">
+                          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-primary/60 mb-1">📋 Pasos</p>
                           {act.pasos.map((p: string, i: number) => (
-                            <div key={i} className="flex gap-3 items-start bg-primary/[0.03] border border-primary/10 rounded-xl p-3">
-                              <div className="shrink-0 w-6 h-6 rounded-full bg-primary text-white text-xs font-black flex items-center justify-center mt-0.5">
+                            <div key={i} className="flex gap-3 items-start py-1">
+                              <div className="shrink-0 w-6 h-6 rounded-full bg-primary text-white text-xs font-black flex items-center justify-center mt-0.5 shadow-sm">
                                 {i + 1}
                               </div>
-                              <p className="text-sm text-foreground/85 leading-snug">{p}</p>
+                              <p className="text-sm text-foreground/80 leading-relaxed">{p}</p>
                             </div>
                           ))}
                         </div>
                       )}
                       {/* Resultado esperado */}
                       {act.resultado_esperado && (
-                        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 mb-4 flex gap-2">
-                          <span className="text-emerald-600 shrink-0">🎯</span>
+                        <div className="border-l-2 border-emerald-500 pl-3 mb-4 flex gap-2">
+                          <span className="text-emerald-600 shrink-0 text-sm">🎯</span>
                           <div>
                             <p className="text-[9px] font-black uppercase tracking-wider text-emerald-600 mb-0.5">Resultado esperado</p>
-                            <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-snug">{act.resultado_esperado}</p>
+                            <p className="text-xs text-slate-700 dark:text-slate-350 leading-relaxed font-semibold">{act.resultado_esperado}</p>
                           </div>
                         </div>
                       )}
 
                       {/* Razonamiento */}
                       {act.aiReasoning && (
-                        <div className="bg-primary/[0.03] border border-primary/10 rounded-xl p-3 mb-4 italic text-xs text-muted-foreground flex gap-2">
-                          <span className="text-primary font-bold shrink-0">mIAngel:</span>
+                        <div className="border-l-2 border-primary/30 pl-3 mb-4 italic text-xs text-slate-500 flex gap-2">
+                          <span className="text-primary font-black shrink-0">mIAngel:</span>
                           <span>"{act.aiReasoning}"</span>
                         </div>
                       )}
@@ -617,31 +614,31 @@ Contexto/Lugar: "${query}"\n${esSinObjetivo ? "Modo: CONTROL DE SITUACIÓN. No h
                   </div>
                   {/* Pasos */}
                   {practiceActivity.pasos && practiceActivity.pasos.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-black uppercase tracking-[0.15em] text-primary/70 mb-3">📋 Pasos a seguir</p>
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-black uppercase tracking-[0.15em] text-primary/70 mb-2">📋 Pasos a seguir</p>
                       {practiceActivity.pasos.map((p: string, i: number) => (
-                        <div key={i} className="flex gap-3 items-start bg-primary/[0.04] border border-primary/15 rounded-xl p-4">
-                          <div className="shrink-0 w-7 h-7 rounded-full bg-primary text-white text-sm font-black flex items-center justify-center mt-0.5">
+                        <div key={i} className="flex gap-3 items-start py-1.5">
+                          <div className="shrink-0 w-7 h-7 rounded-full bg-primary text-white text-sm font-black flex items-center justify-center mt-0.5 shadow-sm">
                             {i + 1}
                           </div>
-                          <p className="text-sm text-foreground/85 leading-relaxed">{p}</p>
+                          <p className="text-sm text-foreground/80 leading-relaxed">{p}</p>
                         </div>
                       ))}
                     </div>
                   )}
                   {/* Resultado esperado */}
                   {practiceActivity.resultado_esperado && (
-                    <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex gap-3">
-                      <span className="text-emerald-600 text-lg shrink-0">🎯</span>
+                    <div className="border-l-2 border-emerald-500 pl-3 flex gap-3">
+                      <span className="text-emerald-600 text-sm shrink-0">🎯</span>
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600 mb-0.5">Resultado esperado</p>
-                        <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-snug">{practiceActivity.resultado_esperado}</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-350 leading-relaxed font-semibold">{practiceActivity.resultado_esperado}</p>
                       </div>
                     </div>
                   )}
                   {/* Razonamiento */}
                   {practiceActivity.aiReasoning && (
-                    <div className="bg-primary/[0.04] border border-primary/15 rounded-2xl p-4 italic text-sm text-muted-foreground flex gap-3">
+                    <div className="border-l-2 border-primary/30 pl-3 italic text-sm text-slate-500 flex gap-3">
                       <span className="text-primary font-black shrink-0">mIAngel:</span>
                       <span>"{practiceActivity.aiReasoning}"</span>
                     </div>

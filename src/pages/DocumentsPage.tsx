@@ -42,7 +42,7 @@ export default function DocumentsPage() {
     try {
       const { data, error } = await supabase
         .from("documentos_validados")
-        .select("*")
+        .select("id, titulo, autor, tipo_archivo, tipo_contenido, url_archivo")
         .order("titulo");
       
       if (data) setLibraryDocs(data);

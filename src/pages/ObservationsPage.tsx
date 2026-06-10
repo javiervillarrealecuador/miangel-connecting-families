@@ -1,17 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Plus, Loader2, Filter, X, Search, Calendar, User, MapPin, 
-  Music, MoreVertical, Edit2, Trash2, Smile, Frown, Meh, 
-  Angry, Wind, Target, RotateCcw, Activity, MessageSquare 
-} from "lucide-react";
+import { Plus, Loader2, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,45 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import AppLayout from "@/components/AppLayout";
-import { timeAgo } from "@/data/mockData";
 import { supabase } from "@/lib/supabase";
+import ObservationCard from "@/components/ObservationCard";
 
 const typeOptions = ["Lenguaje", "Social", "Motor", "Comportamiento", "Sensorial", "Adaptativo"];
-
-const severityStyles: Record<string, string> = {
-  baja: "text-success bg-success/10 border-success/20",
-  normal: "text-blue-500 bg-blue-50 border-blue-100",
-  alta: "text-warning bg-warning/10 border-warning/20",
-  critica: "text-critical bg-critical/10 border-critical/20 font-black",
-};
-
-const typeIcons: Record<string, any> = {
-  lenguaje: <MessageSquare size={16} />,
-  social: <Smile size={16} />,
-  motor: <Activity size={16} />,
-  comportamiento: <Target size={16} />,
-  sensorial: <Wind size={16} />,
-  adaptativo: <RotateCcw size={16} />
-};
-
-const sentimentIcons: Record<string, any> = {
-  positivo: <Smile className="text-success" size={24} strokeWidth={2.5} />,
-  neutral: <Meh className="text-slate-400" size={24} strokeWidth={2.5} />,
-  negativo: <Frown className="text-critical" size={24} strokeWidth={2.5} />,
-  alegre: <Smile className="text-success" size={16} />,
-  triste: <Frown className="text-blue-500" size={16} />,
-  calmado: <Wind className="text-teal-500" size={16} />,
-  ansioso: <Meh className="text-warning" size={16} />,
-  enojado: <Angry className="text-critical" size={16} />,
-};
 
 export default function ObservationsPage() {
   const navigate = useNavigate();
@@ -71,10 +29,21 @@ export default function ObservationsPage() {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    loadObservations();
-  }, []);
+    setPage(0);
+    setHasMore(true);
+    loadObservations(0, false, typeFilter);
+  }, [typeFilter]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    loadObservations(nextPage, true, typeFilter);
+  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -97,10 +66,16 @@ export default function ObservationsPage() {
     }
   };
 
-  const loadObservations = async () => {
+  const loadObservations = async (pageIndex: number = 0, append: boolean = false, currentFilters: string[] = typeFilter) => {
+    if (pageIndex === 0) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
+      setLoadingMore(false);
       return;
     }
 
@@ -113,13 +88,18 @@ export default function ObservationsPage() {
       const pIds = teamData.map(t => t.persona_autismo_id).filter(id => !!id);
       if (pIds.length === 0) {
         setLoading(false);
+        setLoadingMore(false);
         return;
       }
       
-      const { data: obsData, error: obsError } = await supabase
+      const PAGE_SIZE = 20;
+      const from = pageIndex * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      let queryBuilder = supabase
         .from("observaciones")
         .select(`
-          *,
+          id, tipo, sentimiento, severidad, registrado_por, rol_registrador, fecha_observacion, descripcion_texto, contexto, intensidad_escala,
           vinculacion:goal_observations(
             id,
             puntaje,
@@ -127,20 +107,38 @@ export default function ObservationsPage() {
             goal:pai_goals(title)
           )
         `)
-        .in("persona_autismo_id", pIds)
-        .order("fecha_observacion", { ascending: false });
+        .in("persona_autismo_id", pIds);
+
+      if (currentFilters.length > 0) {
+        queryBuilder = queryBuilder.in("tipo", currentFilters);
+      }
+
+      const { data: obsData, error: obsError } = await queryBuilder
+        .order("fecha_observacion", { ascending: false })
+        .range(from, to);
         
       if (obsError) {
         console.error("Error fetching observations with join:", obsError);
-        const { data: fallbackData } = await supabase
+        let fallbackQuery = supabase
           .from("observaciones")
-          .select("*")
-          .in("persona_autismo_id", pIds)
-          .order("fecha_observacion", { ascending: false });
+          .select("id, tipo, sentimiento, severidad, registrado_por, rol_registrador, fecha_observacion, descripcion_texto, contexto, intensidad_escala")
+          .in("persona_autismo_id", pIds);
+          
+        if (currentFilters.length > 0) {
+          fallbackQuery = fallbackQuery.in("tipo", currentFilters);
+        }
+
+        const { data: fallbackData } = await fallbackQuery
+          .order("fecha_observacion", { ascending: false })
+          .range(from, to);
         
-        if (fallbackData) setRealObservations(fallbackData);
+        if (fallbackData) {
+          setRealObservations(prev => append ? [...prev, ...fallbackData] : fallbackData);
+          setHasMore(fallbackData.length === PAGE_SIZE);
+        }
       } else if (obsData) {
-        setRealObservations(obsData);
+        setRealObservations(prev => append ? [...prev, ...obsData] : obsData);
+        setHasMore(obsData.length === PAGE_SIZE);
       }
 
       if (pIds && pIds.length > 0 && pIds[0]) {
@@ -160,7 +158,6 @@ export default function ObservationsPage() {
             }
           });
           
-          // Asegurar que el usuario actual use su nombre completo
           const currentUserName = user.user_metadata?.full_name || user.email?.split('@')[0] || "Tú";
           const currentUserTeamData = teamMembers.find(m => m.user_id === user.id);
           const currentUserRole = currentUserTeamData?.rol || "Padre";
@@ -171,11 +168,10 @@ export default function ObservationsPage() {
       }
     }
     setLoading(false);
+    setLoadingMore(false);
   };
 
-  const filtered = typeFilter.length > 0
-    ? realObservations.filter(o => o.tipo && typeFilter.map(t => t.toLowerCase()).includes(o.tipo.toLowerCase()))
-    : realObservations;
+  const filtered = realObservations;
 
   return (
     <AppLayout>
@@ -241,156 +237,42 @@ export default function ObservationsPage() {
                </div>
             ) : (
               filtered.map((obs) => {
-                const vinculacion = obs.vinculacion?.[0];
-                const linkedGoal = vinculacion?.goal;
-                const impactVal = vinculacion?.puntaje;
-                const impactDir = vinculacion?.direccion;
-                
-                const isPositive = impactDir === 'positivo';
-                const isNegative = impactDir === 'negativo';
-                const impactValNum = impactVal !== undefined && impactVal !== null ? Number(impactVal) : null;
-                const displayImpact = impactValNum !== null ? (isNegative ? `-${Math.abs(impactValNum)}%` : `+${impactValNum}%`) : null;
-                
                 const memberInfo = obs.registrado_por ? teamMembersMap[obs.registrado_por] : null;
                 const authorName = memberInfo?.name || "Usuario";
                 const authorRole = obs.rol_registrador || memberInfo?.role || "Miembro";
-                const displayAuthor = `${authorName} (${authorRole})`;
 
                 return (
-                  <div key={obs.id} className="relative bg-white border-2 border-slate-100 rounded-[40px] p-8 md:p-10 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/20 transition-all group overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors" />
-                    
-                    <div className="relative z-10">
-                      <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8">
-                        <div className="flex items-center gap-5">
-                          <div className="text-4xl bg-gradient-to-br from-slate-50 to-slate-100 w-16 h-16 rounded-[24px] flex items-center justify-center border-2 border-white shadow-xl group-hover:scale-110 transition-transform">
-                            {typeIcons[obs.tipo?.toLowerCase()] || '📝'}
-                          </div>
-                          <div>
-                            <div className="flex flex-wrap items-center gap-3 mb-2">
-                              <h3 className="font-black text-slate-900 text-xl uppercase tracking-tight leading-none">{obs.tipo}</h3>
-                              {linkedGoal && (
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary text-white shadow-lg shadow-primary/20 border-none">
-                                  <Target size={12} strokeWidth={4} />
-                                  Meta: {linkedGoal.title}
-                                </div>
-                              )}
-                              {obs.sentimiento && (
-                                <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                                  {sentimentIcons[obs.sentimiento.toLowerCase()]}
-                                  <span className="text-[10px] font-black uppercase text-slate-500 tracking-tighter">{obs.sentimiento}</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${severityStyles[obs.severidad?.toLowerCase()] || severityStyles.normal}`}>
-                                {obs.severidad?.toLowerCase() === 'critica' && <div className="w-1.5 h-1.5 rounded-full bg-critical animate-pulse" />}
-                                {obs.severidad || 'Normal'}
-                              </div>
-                              {displayImpact && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm cursor-help transition-all hover:scale-105 ${isPositive ? 'bg-success/10 text-success border-success/20' : isNegative ? 'bg-critical/10 text-critical border-critical/20' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                                      <Activity size={12} className={isPositive ? "animate-pulse" : ""} />
-                                      Impacto: {displayImpact}
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-[320px] p-5 bg-slate-900 text-white rounded-[28px] border-none shadow-2xl z-[100]">
-                                    <div className="space-y-3">
-                                      <div className="flex items-center gap-2">
-                                        <div className="p-1.5 bg-primary/20 rounded-lg">
-                                          <Target size={14} className="text-primary" />
-                                        </div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">Detalle de Valoración</p>
-                                      </div>
-                                      <p className="text-xs leading-relaxed font-medium">
-                                        Impacto de <span className={isPositive ? "text-success font-bold" : "text-critical font-bold"}>{displayImpact}</span> calculado para la meta: <br/>
-                                        <span className="text-primary font-bold">"{linkedGoal?.title}"</span>.
-                                      </p>
-                                      <div className="pt-2 border-t border-white/10">
-                                        <p className="text-[9px] text-slate-400 leading-tight">
-                                          Basado en una intensidad de <span className="text-white font-bold">{obs.intensidad_escala}/5</span> en el contexto de <span className="text-white font-bold">{obs.contexto || "General"}</span>.
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-2 ml-auto sm:ml-0">
-                          <div className="text-right hidden sm:block">
-                            <div className="flex flex-col items-end gap-1 mb-2">
-                              <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase text-white tracking-widest bg-primary px-4 py-1.5 rounded-full border shadow-lg shadow-primary/20">
-                                <User size={12} strokeWidth={4} /> {displayAuthor}
-                              </div>
-                              <span className="text-[8px] font-black uppercase text-slate-400 mr-2 tracking-widest">REGISTRADO POR</span>
-                            </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter flex items-center justify-end gap-1.5">
-                              <Calendar size={12} /> {timeAgo(new Date(obs.fecha_observacion).getTime())}
-                            </p>
-                          </div>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-primary">
-                                <MoreVertical size={20} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-2xl border-2 p-2 min-w-[160px] shadow-2xl">
-                              <DropdownMenuItem 
-                                onClick={() => navigate(`/observations/new?edit=${obs.id}`)}
-                                className="rounded-xl h-11 font-black text-[10px] uppercase tracking-widest gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary"
-                              >
-                                <Edit2 size={16} /> Editar Registro
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => setDeleteId(obs.id)}
-                                className="rounded-xl h-11 font-black text-[10px] uppercase tracking-widest gap-3 cursor-pointer text-critical focus:bg-critical/5 focus:text-critical"
-                              >
-                                <Trash2 size={16} /> Eliminar Registro
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-50/50 p-6 md:p-8 rounded-[32px] border-2 border-white shadow-inner mb-8 group-hover:bg-white transition-colors">
-                        <p className="text-base md:text-lg font-medium text-slate-700 leading-relaxed italic">
-                          "{obs.descripcion_texto}"
-                        </p>
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-between gap-6">
-                        <div className="flex items-center gap-2 text-[11px] font-black uppercase text-slate-400 tracking-widest bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm">
-                          <MapPin size={16} className="text-primary" strokeWidth={3} />
-                          {obs.contexto || "General"}
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-2">
-                          <span className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] mr-1">Intensidad</span>
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map(i => (
-                              <div 
-                                key={i} 
-                                className={`h-2.5 w-6 rounded-full transition-all duration-500 ${
-                                  i <= obs.intensidad_escala 
-                                    ? (obs.intensidad_escala >= 4 ? 'bg-gradient-to-r from-critical to-red-400 shadow-lg shadow-critical/20' : 'bg-gradient-to-r from-primary to-blue-400 shadow-lg shadow-primary/20') 
-                                    : 'bg-slate-100'
-                                }`} 
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <ObservationCard
+                    key={obs.id}
+                    obs={obs}
+                    authorName={authorName}
+                    authorRole={authorRole}
+                    onEdit={(id) => navigate(`/observations/new?edit=${id}`)}
+                    onDelete={(id) => setDeleteId(id)}
+                  />
                 );
               })
             )}
           </div>
+
+          {hasMore && filtered.length > 0 && (
+            <div className="flex justify-center pt-8">
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="h-12 px-8 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest gap-2 hover:bg-slate-50 transition-all shadow-sm"
+              >
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="animate-spin" size={14} /> Sincronizando...
+                  </>
+                ) : (
+                  "Cargar más registros"
+                )}
+              </Button>
+            </div>
+          )}
 
           <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
             <AlertDialogContent className="rounded-[40px] border-4 p-8">

@@ -58,7 +58,7 @@ export default function OnboardingPage() {
       if (user?.email) {
         const { data } = await supabase
           .from("equipo_pai")
-          .select("*, per:personas_autismo(full_name)")
+          .select("id, rol, invite_email, invite_status, persona_autismo_id, per:personas_autismo(full_name)")
           .ilike("invite_email", user.email)
           .eq("invite_status", "pendiente")
           .maybeSingle();
@@ -108,7 +108,7 @@ export default function OnboardingPage() {
       const { data: familyData, error: familyError } = await supabase
         .from("familias")
         .insert({ propietario_id: user.id, nombre_familia: `Familia de ${childName}` })
-        .select().single();
+        .select("id").single();
 
       if (familyError) throw familyError;
 
@@ -123,7 +123,7 @@ export default function OnboardingPage() {
           nivel_apoyo: supportLevel,
           tipo_escolaridad: attendsSchool ? "regular" : "casa"
         })
-        .select().single();
+        .select("id").single();
 
       if (childError) throw childError;
 

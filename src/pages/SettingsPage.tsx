@@ -146,7 +146,22 @@ export default function SettingsPage() {
       const pId = teamData[0].persona_autismo_id;
       const { data: cData } = await supabase
         .from("personas_autismo")
-        .select("*")
+        .select(`
+          id, familia_id, full_name, birth_date, diagnosis_date, sexo_nacimiento, identidad_genero,
+          nacionalidad, ciudad_provincia, idiomas_casa, nombre_madre, telefono_madre, nombre_padre, telefono_padre,
+          tipo_escolaridad, anio_escolar, nombre_establecimiento, nombre_profesor, telefono_profesor, profesor_sombra,
+          diagnostico_tea, nivel_apoyo, edad_primera_palabra, edad_caminar, regresion, edad_regresion, detalle_regresion,
+          comorbilidades, materias_interes, habilidades_sociales, habilidades_comunicativas, conductas_desafiantes,
+          emociones_reconocidas, sensorial_auditiva, sensorial_visual, sensorial_tactil, sensorial_gusto_olfato,
+          sensorial_propioceptiva, sensorial_vestibular, motor_fina, motor_gruesa, motor_coordinacion, motor_equilibrio,
+          motor_pinza, motor_escritura, motor_utensilios, autonomia_vestido, autonomia_alimentacion, autonomia_higiene,
+          autonomia_sueno, adaptativa_transiciones, adaptativa_rutinas, practica_deporte, deportes_practicados,
+          terapia_aba, terapia_cognitiva, terapia_lenguaje, terapia_ocupacional, terapia_sociales, fortalezas_intereses,
+          fortalezas_refuerzos, fortalezas_actividades, fortalezas_talentos, areas_competencia, circulo_interaccion,
+          interaccion_animales, interaccion_animales_otro, problemas_academicos, lenguaje_expresivo, lenguaje_receptivo,
+          dificultades_comunicacion, habilidades_socioemocionales, sistemas_comunicacion, cd_autoagresion, cd_berrinches,
+          cd_fuga, cd_destruccion
+        `)
         .eq("id", pId)
         .single();
 

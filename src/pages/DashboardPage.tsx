@@ -68,9 +68,9 @@ export default function DashboardPage() {
         setChildName(teamData[0].personas_autismo?.full_name || "Hijo/a");
 
         const [obs, goals, alts] = await Promise.all([
-          supabase.from("observaciones").select("*").eq("persona_autismo_id", pid).order("fecha_observacion", { ascending: true }).limit(30),
+          supabase.from("observaciones").select("id, fecha_observacion, intensidad_escala").eq("persona_autismo_id", pid).order("fecha_observacion", { ascending: true }).limit(30),
           supabase.from("pai_goals").select("id", { count: "exact" }).eq("persona_autismo_id", pid).in("status", ["activo", "in_progress"]),
-          supabase.from("alertas").select("*").eq("persona_autismo_id", pid).order("created_at", { ascending: false }).limit(10)
+          supabase.from("alertas").select("id, severidad, tipo, created_at, descripcion, registrado_por, creada_por, leida_por").eq("persona_autismo_id", pid).order("created_at", { ascending: false }).limit(10)
         ]);
 
         // Filtrar alertas no leídas por el usuario actual
@@ -253,7 +253,7 @@ export default function DashboardPage() {
     if (familiaId) {
       const { data } = await supabase
         .from("equipo_pai")
-        .select("*")
+        .select("user_id, rol, invite_email")
         .eq("familia_id", familiaId)
         .neq("user_id", currentUserId);
       if (data) setTeamMembers(data);
@@ -591,7 +591,7 @@ export default function DashboardPage() {
                 >
                   <option value="">Selecciona un miembro...</option>
                   {teamMembers.map(m => (
-                    <option key={m.user_id} value={m.user_id}>{m.user_email?.split('@')[0]} ({m.rol?.replace('_', ' ')})</option>
+                    <option key={m.user_id} value={m.user_id}>{m.invite_email?.split('@')[0] || m.rol} ({m.rol?.replace('_', ' ')})</option>
                   ))}
                 </select>
               </div>

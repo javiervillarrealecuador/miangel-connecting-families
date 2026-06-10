@@ -58,15 +58,19 @@ export default function ReportsPage() {
       if (!pId) { setLoading(false); return; }
 
       const [{ data: cData }, { data: items }, { data: obsData }, { data: sumData }] = await Promise.all([
-        supabase.from("personas_autismo").select("*").eq("id", pId).single(),
+        supabase.from("personas_autismo").select(`
+          id, familia_id, full_name, birth_date, nivel_apoyo, identidad_genero, nacionalidad, ciudad_provincia,
+          nombre_madre, telefono_madre, nombre_padre, telefono_padre, circulo_interaccion,
+          tipo_escolaridad, nombre_establecimiento, anio_escolar, nombre_profesor, telefono_profesor, profesor_sombra
+        `).eq("id", pId).single(),
         supabase.from("persona_perfil_items").select("catalogos(categoria, nombre)").eq("persona_id", pId),
         supabase.from("observaciones")
-          .select("*")
+          .select("id, tipo, fecha_observacion, descripcion_texto, contexto, severidad, intensidad_escala")
           .eq("persona_autismo_id", pId)
           .order("fecha_observacion", { ascending: false })
           .limit(10),
         supabase.from("resumenes_consolidados")
-          .select("*")
+          .select("id, created_at, resumen_texto, tendencia")
           .eq("persona_autismo_id", pId)
           .order("created_at", { ascending: false })
           .limit(3)
@@ -101,7 +105,7 @@ export default function ReportsPage() {
       // 1. Obtener observaciones recientes
       const { data: obsList, error: obsErr } = await supabase
         .from("observaciones")
-        .select("*")
+        .select("id, tipo, fecha_observacion, descripcion_texto, contexto, severidad, intensidad_escala")
         .eq("persona_autismo_id", childData.id)
         .order("fecha_observacion", { ascending: false })
         .limit(30);
@@ -119,53 +123,12 @@ export default function ReportsPage() {
         `- [${new Date(o.fecha_observacion).toLocaleDateString()}] Tipo: ${o.tipo}, Contexto: ${o.contexto || 'General'}, Intensidad: ${o.intensidad_escala || o.intensidad || 3}/5, Descripción: ${o.descripcion_texto}`
       ).join("\n");
 
-      // 3. Configurar DeepSeek API
-      const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
-      if (!apiKey) {
-        throw new Error("No se encontró la clave VITE_DEEPSEEK_API_KEY. Por favor agrégala a tus variables de entorno (.env).");
-      }
-
-      const prompt = `Eres un psicólogo clínico experto en autismo (TEA) para la plataforma mIAngel.
-Analiza las siguientes observaciones recientes del niño/a:
-${formattedObs}
-
-Genera un análisis clínico estructurado para el Plan de Acción Integral (PAI) que ayude a los terapeutas y padres.
-IMPORTANTE: Debes responder ÚNICAMENTE con un objeto JSON válido, sin formato markdown, sin comillas triples y sin texto adicional.
-
-El formato del JSON debe ser exactamente este:
-{
-  "resumen_texto": "Escribe un resumen clínico consolidado de las observaciones (máximo 3 párrafos). Debe ser empático, detallado y profesional.",
-  "tendencia": "Estable o Progreso o Regresión",
-  "cambios_comportamiento": "Cambios clave observados en su conducta.",
-  "recomendaciones_futuro": "Sugerencias prácticas para trabajar en el aula o en el hogar."
-}`;
-
-      const response = await fetch("https://api.deepseek.com/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: "Eres un sistema experto que siempre responde en formato JSON estricto." },
-            { role: "user", content: prompt }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.3
-        })
+      // 3. Llamar a la Edge Function segura
+      const { data: parsedData, error: fnError } = await supabase.functions.invoke("generate-report", {
+        body: { formattedObs }
       });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(`Error en la API de DeepSeek (${response.status}): ${errData.error?.message || response.statusText}`);
-      }
-
-      const apiData = await response.json();
-      const responseText = apiData.choices[0].message.content;
-      const cleanJsonText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-      const parsedData = JSON.parse(cleanJsonText);
+      if (fnError) throw fnError;
 
       const finalTexto = `${parsedData.resumen_texto}\n\n**Tendencia Detectada:** ${parsedData.tendencia || "Estable"}\n\n**Cambios Observados:**\n${parsedData.cambios_comportamiento || "No detectados"}\n\n**Recomendaciones:**\n${parsedData.recomendaciones_futuro || "Ninguna"}`;
 
@@ -189,7 +152,7 @@ El formato del JSON debe ser exactamente este:
       // 5. Recargar lista de resúmenes
       const { data: updatedSummaries } = await supabase
         .from("resumenes_consolidados")
-        .select("*")
+        .select("id, created_at, resumen_texto, tendencia")
         .eq("persona_autismo_id", childData.id)
         .order("created_at", { ascending: false })
         .limit(3);
@@ -304,6 +267,7 @@ El formato del JSON debe ser exactamente este:
                 <p className="text-xs italic text-slate-400">No hay observaciones registradas recientemente.</p>
               )}
             </div>
+          </section>
           <section>
             <SectionHeader n={5} title="Análisis Clínico Inteligente (mIAngel)" />
             <div className="space-y-4">

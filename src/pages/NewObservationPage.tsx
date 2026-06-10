@@ -90,7 +90,7 @@ export default function NewObservationPage() {
         if (editId) {
           const { data: existingObs } = await supabase
             .from("observaciones")
-            .select("*")
+            .select("tipo, contexto, descripcion_texto, sentimiento, intensidad_escala")
             .eq("id", editId)
             .single();
           
@@ -171,8 +171,8 @@ export default function NewObservationPage() {
       };
 
       const { data: obsData, error: obsError } = editId 
-        ? await supabase.from("observaciones").update(obsPayload).eq("id", editId).select().single()
-        : await supabase.from("observaciones").insert(obsPayload).select().single();
+        ? await supabase.from("observaciones").update(obsPayload).eq("id", editId).select("id").single()
+        : await supabase.from("observaciones").insert(obsPayload).select("id").single();
 
       if (obsError || !obsData) throw new Error(`Obs: ${obsError?.message || "Error al guardar"}`);
 

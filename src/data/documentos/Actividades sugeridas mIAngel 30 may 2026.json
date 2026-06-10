@@ -28,7 +28,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bmdra2ZodXBrbXptb2t5aWdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcwNzgzNywiZXhwIjoyMDkzMjgzODM3fQ.rlwfmruCjEXw0ABU9aQbAYTClUpSyli7O2fTxL17YL8"
+              "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
             }
           ]
         },
@@ -51,7 +51,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bmdra2ZodXBrbXptb2t5aWdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcwNzgzNywiZXhwIjoyMDkzMjgzODM3fQ.rlwfmruCjEXw0ABU9aQbAYTClUpSyli7O2fTxL17YL8"
+              "value": "YOUR_SUPABASE_SERVICE_ROLE_KEY"
             }
           ]
         },
@@ -69,13 +69,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyDkRr5eS-ZTmE0TlY5nATCOkWEQ3Ehc1mg",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=YOUR_GOOGLE_AI_KEY",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
               "name": "key",
-              "value": "AIzaSyBQ3vLjOb2ozwcq7aIBhgAepjLn42lENPA"
+              "value": "YOUR_GOOGLE_AI_KEY"
             }
           ]
         },
