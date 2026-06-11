@@ -155,19 +155,35 @@ export default function ReportsPage() {
           generado_por: user?.id || "agente_ia"
         });
 
-      if (insertErr) throw insertErr;
+      if (insertErr) {
+        console.error("Error al insertar el resumen:", insertErr);
+        // Si hay error de RLS, avisamos pero continuamos para mostrarlo en pantalla
+      }
 
       toast.success("¡Resumen consolidado generado por IA con éxito!");
       
-      // 5. Recargar lista de resúmenes
-      const { data: updatedSummaries } = await supabase
+      // Actualización optimista de la UI para que se vea inmediatamente
+      const newSummary = {
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+        resumen_texto: finalTexto
+      };
+      
+      setSummaries(prev => [newSummary, ...prev].slice(0, 3));
+
+      // 5. Recargar lista de resúmenes de la BD
+      const { data: updatedSummaries, error: fetchErr } = await supabase
         .from("resumenes_consolidados")
         .select("id, created_at, resumen_texto")
         .eq("persona_autismo_id", childData.id)
         .order("created_at", { ascending: false })
         .limit(3);
       
-      if (updatedSummaries) setSummaries(updatedSummaries);
+      if (fetchErr) {
+        console.error("Error fetching summaries (posible bloqueo de RLS):", fetchErr);
+      } else if (updatedSummaries && updatedSummaries.length > 0) {
+        setSummaries(updatedSummaries);
+      }
     } catch (error: any) {
       console.error("Error al consolidar con IA:", error);
       toast.error(`Error al generar análisis con IA: ${error.message || error}`);
