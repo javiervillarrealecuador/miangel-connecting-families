@@ -130,6 +130,10 @@ export default function ReportsPage() {
 
       if (fnError) throw fnError;
 
+      if (parsedData && parsedData.error) {
+        throw new Error(parsedData.error);
+      }
+
       const finalTexto = `${parsedData.resumen_texto}\n\n**Tendencia Detectada:** ${parsedData.tendencia || "Estable"}\n\n**Cambios Observados:**\n${parsedData.cambios_comportamiento || "No detectados"}\n\n**Recomendaciones:**\n${parsedData.recomendaciones_futuro || "Ninguna"}`;
 
       const { data: { user } } = await supabase.auth.getUser();

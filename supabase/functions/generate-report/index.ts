@@ -11,11 +11,11 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('GOOGLE_AI_KEY')
+    const apiKey = Deno.env.get('DEEPSEEK_API_KEY')
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'GOOGLE_AI_KEY is not set on the server.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ error: 'DEEPSEEK_API_KEY is not set on the server.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
 
@@ -24,7 +24,7 @@ serve(async (req) => {
     if (!formattedObs) {
       return new Response(
         JSON.stringify({ error: 'Missing formattedObs' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
 
@@ -43,33 +43,30 @@ El formato del JSON debe ser exactamente este:
   "recomendaciones_futuro": "Sugerencias prácticas para trabajar en el aula o en el hogar."
 }`
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-
-    const response = await fetch(url, {
-      method: 'POST',
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: "Eres un sistema experto que siempre responde en formato JSON estricto." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3
       })
     })
 
     if (!response.ok) {
       const errText = await response.text()
-      throw new Error(`Google Gemini API responded with status ${response.status}: ${errText}`)
+      throw new Error(`DeepSeek API responded with status ${response.status}: ${errText}`)
     }
 
     const apiData = await response.json()
-    const responseText = apiData.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const responseText = apiData.choices[0].message.content
     const cleanJsonText = responseText.replace(/```json/g, "").replace(/```/g, "").trim()
     const parsedData = JSON.parse(cleanJsonText)
 
@@ -80,7 +77,7 @@ El formato del JSON debe ser exactamente este:
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   }
 })
