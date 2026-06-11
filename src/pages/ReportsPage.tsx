@@ -310,7 +310,7 @@ export default function ReportsPage() {
       </div>
 
       {/* ────────── VISTA DE PANTALLA (OPTIMIZADA) ────────── */}
-      <div className="animate-fade-in max-w-4xl mx-auto px-2">
+      <div className="print-hidden animate-fade-in max-w-4xl mx-auto px-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-foreground tracking-tighter">Reportes Clínicos</h1>

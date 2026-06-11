@@ -112,4 +112,11 @@
 /* Fix para impresión */
 @media print {
   .print-hidden { display: none !important; }
+  
+  body, html, #root {
+    height: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    background: white !important;
+  }
 }

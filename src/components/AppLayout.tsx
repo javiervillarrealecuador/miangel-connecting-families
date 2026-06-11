@@ -88,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Sidebar Premium */}
-      <aside className={`fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-72 bg-primary flex flex-col transition-all duration-500 ease-in-out shadow-2xl ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
+      <aside className={`print-hidden fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-72 bg-primary flex flex-col transition-all duration-500 ease-in-out shadow-2xl ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
         {/* Logo & Close */}
         <div className="p-8 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-3 group" onClick={() => setSidebarOpen(false)}>
@@ -186,9 +186,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:overflow-visible print:h-auto">
         {/* Sticky Header Responsive */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-2xl border-b border-slate-100 h-20 md:h-24 px-6 md:px-10 flex items-center gap-6">
+        <header className="print-hidden sticky top-0 z-30 bg-white/90 backdrop-blur-2xl border-b border-slate-100 h-20 md:h-24 px-6 md:px-10 flex items-center gap-6">
           <button 
             className="lg:hidden w-12 h-12 flex items-center justify-center bg-primary/10 rounded-2xl text-primary shadow-sm active:scale-90 transition-transform" 
             onClick={() => setSidebarOpen(true)}
@@ -233,8 +233,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Body Content with optimized padding for all screens */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden bg-[#f8fafc]/50">
-          <div className="p-6 md:p-10 lg:p-16 max-w-7xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden bg-[#f8fafc]/50 print:overflow-visible print:h-auto print:bg-white print:p-0">
+          <div className="p-6 md:p-10 lg:p-16 max-w-7xl w-full mx-auto print:p-0 print:max-w-none">
             {children}
           </div>
         </main>
