@@ -35,6 +35,12 @@ const SectionHeader = ({ n, title }: { n: number; title: string }) => (
   </h2>
 );
 
+const getTendencia = (texto: string) => {
+  if (!texto) return "Estable";
+  const match = texto.match(/\*\*Tendencia Detectada:\*\*\s*(.+)/i);
+  return match ? match[1].split("\n")[0].trim() : "Estable";
+};
+
 export default function ReportsPage() {
   const [childData, setChildData] = useState<any>(null);
   const [profileItems, setProfileItems] = useState<Record<string, string[]>>({});
@@ -70,7 +76,7 @@ export default function ReportsPage() {
           .order("fecha_observacion", { ascending: false })
           .limit(10),
         supabase.from("resumenes_consolidados")
-          .select("id, created_at, resumen_texto, tendencia")
+          .select("id, created_at, resumen_texto")
           .eq("persona_autismo_id", pId)
           .order("created_at", { ascending: false })
           .limit(3)
@@ -156,7 +162,7 @@ export default function ReportsPage() {
       // 5. Recargar lista de resúmenes
       const { data: updatedSummaries } = await supabase
         .from("resumenes_consolidados")
-        .select("id, created_at, resumen_texto, tendencia")
+        .select("id, created_at, resumen_texto")
         .eq("persona_autismo_id", childData.id)
         .order("created_at", { ascending: false })
         .limit(3);
@@ -291,7 +297,7 @@ export default function ReportsPage() {
                     </div>
                     <div className="mt-4 pt-4 border-t border-primary/10">
                       <span className="text-[10px] font-bold uppercase text-slate-500 mr-2">Tendencia:</span>
-                      <span className="text-[10px] font-black uppercase text-success">{sum.tendencia || 'Estable'}</span>
+                      <span className="text-[10px] font-black uppercase text-success">{getTendencia(sum.resumen_texto)}</span>
                     </div>
                   </div>
                 ))
@@ -355,7 +361,7 @@ export default function ReportsPage() {
                   <div className="mt-6 pt-6 border-t border-primary/10 flex flex-wrap gap-4">
                     <div>
                       <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Tendencia</p>
-                      <Badge variant="outline" className="text-success border-success/20 bg-success/5 font-black text-[10px] uppercase">{sum.tendencia || 'Estable'}</Badge>
+                      <Badge variant="outline" className="text-success border-success/20 bg-success/5 font-black text-[10px] uppercase">{getTendencia(sum.resumen_texto)}</Badge>
                     </div>
                   </div>
                 </div>
