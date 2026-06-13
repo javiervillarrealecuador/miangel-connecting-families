@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Eye, Target, Palette, Bell, Users, FileText, Settings, LogOut, Menu, X, Shield, Activity
+  LayoutDashboard, Eye, Target, Palette, Bell, Users, FileText, Settings, LogOut, Menu, X, Shield, Activity, CheckSquare
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Observaciones", icon: Eye, path: "/observations" },
-  { label: "Objetivos PAI", icon: Target, path: "/goals" },
-  { label: "Actividades", icon: Palette, path: "/activities/search" },
-  { label: "Equipo", icon: Users, path: "/team" },
-  { label: "Reportes", icon: FileText, path: "/reports" },
-  { label: "Ajustes", icon: Settings, path: "/settings" },
+  { label: "Centro de control", icon: LayoutDashboard, path: "/dashboard", description: "Vista general de tu cuenta, progreso y notificaciones." },
+  { label: "Comportamientos", icon: Eye, path: "/observations", description: "Registra y monitorea observaciones diarias sobre actitudes y evolución." },
+  { label: "Objetivos propuestos", icon: Target, path: "/goals", description: "Define y haz seguimiento a las metas de desarrollo personal." },
+  { label: "Recomendaciones con IA inmediatas", icon: Palette, path: "/activities/search", description: "Obtén actividades y estrategias sugeridas al instante por Inteligencia Artificial." },
+  { label: "Guías de Apoyo", icon: CheckSquare, path: "/documents", description: "Accede a recursos, plantillas y guías educativas." },
+  { label: "Consultar Equipo", icon: Users, path: "/team", description: "Gestiona a los profesionales y familiares involucrados en el acompañamiento." },
+  { label: "Reportes", icon: FileText, path: "/reports", description: "Visualiza estadísticas y documentos de la evolución en el tiempo." },
+  { label: "Ajustes", icon: Settings, path: "/settings", description: "Configura las preferencias de tu cuenta y el perfil." },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -92,10 +93,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Logo & Close */}
         <div className="p-8 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-3 group" onClick={() => setSidebarOpen(false)}>
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
               <Activity className="text-white" size={24} />
             </div>
-            <span className="text-white font-black text-2xl tracking-tighter">mIAngel</span>
+            <div className="flex flex-col">
+              <span className="text-white font-black text-2xl tracking-tighter leading-none">mIAngel</span>
+              <span className="text-white/70 text-[10px] font-medium leading-tight mt-0.5">Acompañamiento al tratamiento de autismo</span>
+            </div>
           </Link>
           <button className="lg:hidden text-white/60 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X size={24} />
@@ -119,12 +123,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           ) : (
             <Link to="/settings?tab=child" onClick={() => setSidebarOpen(false)} className="block bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md rounded-[24px] p-5 border border-white/10 cursor-pointer">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner">
-                  {childData.name[0]}
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=150&h=150&fit=crop&crop=faces&q=80" alt="Avatar" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-black text-sm truncate uppercase tracking-tight">{childData.name}</p>
-                  <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{childData.age} años · PAI ACTIVO</p>
+                  <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{childData.age} años</p>
                 </div>
               </div>
             </Link>
@@ -139,6 +143,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                <Link
                  key={item.path}
                  to={item.path}
+                 title={item.description}
                  onClick={() => setSidebarOpen(false)}
                  className={`flex items-center gap-4 px-6 h-14 rounded-[20px] transition-all duration-400 group relative ${
                    active

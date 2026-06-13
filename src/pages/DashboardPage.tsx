@@ -547,27 +547,13 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div className="bg-primary rounded-[32px] p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
-              <h3 className="text-xl font-black mb-2 tracking-tight">Estado PAI</h3>
+              <h3 className="text-xl font-black mb-2 tracking-tight leading-tight">Estado del Plan de Acción Integral</h3>
               <p className="text-xs text-white/80 font-medium mb-6">El Plan de Acción Integral tiene {stats.activeGoals} objetivos en curso para {childName}.</p>
               <Link to="/goals">
                 <Button className="w-full bg-white text-primary hover:bg-white/90 rounded-2xl h-12 font-black text-[10px] uppercase tracking-widest shadow-xl">
                   Gestionar Objetivos
                 </Button>
               </Link>
-            </div>
-
-            <div className="bg-card border-2 rounded-[32px] p-6 shadow-sm">
-              <h3 className="text-xs font-black uppercase tracking-widest mb-4">Herramientas Rápidas</h3>
-              <div className="grid grid-cols-1 gap-2">
-                <Link to="/documents">
-                  <Button variant="ghost" className="w-full justify-start h-12 rounded-xl text-xs font-bold gap-3 px-4">
-                    <CheckSquare size={18} className="text-secondary" /> Guías de Apoyo
-                  </Button>
-                </Link>
-                <Button variant="ghost" onClick={handleOpenTeamModal} className="w-full justify-start h-12 rounded-xl text-xs font-bold gap-3 px-4">
-                  <MessageSquare size={18} className="text-blue-500" /> Consultar Equipo
-                </Button>
-              </div>
             </div>
           </div>
         </div>
