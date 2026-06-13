@@ -28,6 +28,7 @@ export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState("");
   const [userPhone, setUserPhone] = useState("");
   const [childId, setChildId] = useState("");
+  const [teamId, setTeamId] = useState("");
   
   // Password change state
   const [newPassword, setNewPassword] = useState("");
@@ -145,13 +146,19 @@ export default function SettingsPage() {
 
     const { data: teamData } = await supabase
       .from("equipo_pai")
-      .select("persona_autismo_id")
+      .select("id, persona_autismo_id, recibir_alertas, metodos_alerta, sensibilidad_minima")
       .eq("user_id", user.id)
       .limit(1);
 
-    if (teamData && teamData.length > 0 && teamData[0].persona_autismo_id) {
-      const pId = teamData[0].persona_autismo_id;
-      const { data: cData } = await supabase
+    if (teamData && teamData.length > 0) {
+      setTeamId(teamData[0].id);
+      if (teamData[0].recibir_alertas !== null) setReceiveAlerts(teamData[0].recibir_alertas);
+      if (teamData[0].metodos_alerta) setAlertMethods(teamData[0].metodos_alerta);
+      if (teamData[0].sensibilidad_minima !== null) setMinSeverity([teamData[0].sensibilidad_minima]);
+
+      if (teamData[0].persona_autismo_id) {
+        const pId = teamData[0].persona_autismo_id;
+        const { data: cData } = await supabase
         .from("personas_autismo")
         .select(`
           id, familia_id, full_name, birth_date, diagnosis_date, sexo_nacimiento, identidad_genero,
@@ -195,7 +202,31 @@ export default function SettingsPage() {
         }));
       }
     }
+    }
     setLoading(false);
+  };
+
+  const handleSaveAlerts = async () => {
+    if (!teamId) {
+      toast.error("Error: No se encontró el registro del equipo.");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("equipo_pai")
+      .update({
+        recibir_alertas: receiveAlerts,
+        metodos_alerta: alertMethods,
+        sensibilidad_minima: minSeverity[0]
+      })
+      .eq("id", teamId);
+      
+    if (error) {
+      toast.error(`Error al guardar: ${error.message}`);
+    } else {
+      toast.success("¡Configuración de alertas guardada con éxito!");
+    }
+    setSaving(false);
   };
 
   const handleSaveChild = async () => {
@@ -737,10 +768,21 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-6">
                     <div className="flex justify-between items-center"><Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sensibilidad</Label><span className="text-[10px] font-black px-2 py-1 bg-primary/10 text-primary rounded-lg">Nivel {minSeverity}</span></div>
-                    <Slider value={minSeverity} onValueChange={setMinSeverity} max={4} step={1} className="py-4" />
+                    <Slider value={minSeverity} onValueChange={setMinSeverity} max={4} min={1} step={1} className="py-4" />
                   </div>
                 </div>
               )}
+              
+              <div className="pt-6 mt-4 border-t border-slate-100">
+                <Button 
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest gap-2" 
+                  onClick={handleSaveAlerts} 
+                  disabled={saving}
+                >
+                  {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                  {saving ? "Guardando..." : "Guardar Configuración de Alertas"}
+                </Button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
