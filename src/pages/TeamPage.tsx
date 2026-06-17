@@ -58,12 +58,14 @@ export default function TeamPage() {
       return;
     }
 
-    const { data: myTeam } = await supabase
+    const { data: myTeamData } = await supabase
       .from("equipo_pai")
       .select("id, rol")
       .eq("user_id", user.id)
       .eq("persona_autismo_id", currentPatientId)
-      .maybeSingle();
+      .limit(1);
+
+    const myTeam = myTeamData?.[0];
 
     if (myTeam) {
       setMyTeamId(myTeam.id);
@@ -90,7 +92,7 @@ export default function TeamPage() {
       if (teamData) {
         const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || "Tú";
         setTeam(teamData.map(m => {
-          const isMe = m.id === myTeam[0].id;
+          const isMe = m.id === myTeam.id;
           const isThisMemberTheOwner = familyInfo?.propietario_id && m.user_id === familyInfo.propietario_id;
 
           let name = m.invite_email || "Usuario Invitado";
