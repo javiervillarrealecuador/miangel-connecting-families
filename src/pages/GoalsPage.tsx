@@ -52,13 +52,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { usePatient } from "@/contexts/PatientContext";
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [childName, setChildName] = useState("");
-  const [childId, setChildId] = useState("");
   const [userRole, setUserRole] = useState("");
+  const { currentPatient, currentPatientId, currentFamilyId } = usePatient();
   
   // Estados para detalles, reactivación y creación
   const [expandedGoalId, setExpandedGoalId] = useState<string | null>(null);
@@ -76,58 +76,55 @@ export default function GoalsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    loadGoals();
-  }, []);
+    if (currentPatientId) {
+      loadGoals();
+    }
+  }, [currentPatientId]);
 
   const loadGoals = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!user || !currentPatientId || !currentFamilyId) {
       setLoading(false);
       return;
     }
 
     const { data: teamData } = await supabase
       .from("equipo_pai")
-      .select("persona_autismo_id, familia_id, rol, personas_autismo(full_name)")
+      .select("rol")
       .eq("user_id", user.id)
-      .limit(1);
+      .eq("persona_autismo_id", currentPatientId)
+      .maybeSingle();
 
-    if (teamData && teamData.length > 0) {
-      const pid = teamData[0].persona_autismo_id;
-      setChildId(pid);
-      setUserRole(teamData[0].rol);
-      // @ts-ignore
-      setChildName(teamData[0].personas_autismo?.full_name || "tu hijo/a");
+    if (teamData) {
+      setUserRole(teamData.rol || "");
+    }
 
-      const { data: goalsData } = await supabase
-        .from("pai_goals")
-        .select(`
-          *,
-          observations:goal_observations(count)
-        `)
-        .eq("persona_autismo_id", pid)
-        .order("created_at", { ascending: false });
+    const { data: goalsData } = await supabase
+      .from("pai_goals")
+      .select(`
+        *,
+        observations:goal_observations(count)
+      `)
+      .eq("persona_autismo_id", currentPatientId)
+      .order("created_at", { ascending: false });
 
-      setGoals(goalsData || []);
+    setGoals(goalsData || []);
 
-      // Cargar nombres del equipo para accountability
-      if (teamData[0].familia_id) {
-        const { data: teamMembers } = await supabase
-          .from("equipo_pai")
-          .select("user_id, rol, invite_email")
-          .eq("familia_id", teamData[0].familia_id);
-        
-        if (teamMembers) {
-          const nameMap: Record<string, string> = {};
-          teamMembers.forEach(m => {
-            if (m.user_id) {
-              nameMap[m.user_id] = m.invite_email?.split('@')[0] || m.rol || "Miembro del Equipo";
-            }
-          });
-          setTeamNames(nameMap);
+    // Cargar nombres del equipo para accountability
+    const { data: teamMembers } = await supabase
+      .from("equipo_pai")
+      .select("user_id, rol, invite_email")
+      .eq("familia_id", currentFamilyId);
+    
+    if (teamMembers) {
+      const nameMap: Record<string, string> = {};
+      teamMembers.forEach(m => {
+        if (m.user_id) {
+          nameMap[m.user_id] = m.invite_email?.split('@')[0] || m.rol || "Miembro del Equipo";
         }
-      }
+      });
+      setTeamNames(nameMap);
     }
     setLoading(false);
   };
@@ -146,7 +143,7 @@ export default function GoalsPage() {
       const { error } = await supabase
         .from("pai_goals")
         .insert({
-          persona_autismo_id: childId,
+          persona_autismo_id: currentPatientId,
           title: newGoal.title,
           description: newGoal.description,
           status: isParent ? "in_progress" : "pending_approval",
@@ -339,7 +336,7 @@ export default function GoalsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div className="space-y-1">
             <h1 className="text-responsive-h1 text-slate-900 leading-none">Plan de Acción (PAI)</h1>
-            <p className="text-sm md:text-base text-slate-500 font-semibold tracking-tight">Metas terapéuticas para {childName}</p>
+            <p className="text-sm md:text-base text-slate-500 font-semibold tracking-tight">Metas terapéuticas para {currentPatient?.name || "el paciente"}</p>
           </div>
           <Button 
             onClick={() => setShowCreateGoal(true)}
@@ -387,7 +384,7 @@ export default function GoalsPage() {
                   <Target size={48} className="text-slate-200" />
                 </div>
                 <p className="font-black uppercase text-xs tracking-[0.3em] text-slate-400">Sin objetivos definidos</p>
-                <p className="text-sm mt-3 font-semibold text-slate-300 max-w-xs mx-auto">Trabaja con el equipo terapéutico para definir las primeras metas del PAI de {childName}.</p>
+                <p className="text-sm mt-3 font-semibold text-slate-300 max-w-xs mx-auto">Trabaja con el equipo terapéutico para definir las primeras metas del PAI de {currentPatient?.name || "el paciente"}.</p>
                 <Button 
                   onClick={() => setShowCreateGoal(true)}
                   className="mt-10 bg-primary h-14 px-10 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20"
@@ -413,7 +410,7 @@ export default function GoalsPage() {
                       Nuevo Objetivo PAI
                     </DialogTitle>
                     <p className="text-xs text-slate-500 font-medium mt-1">
-                      Para <span className="font-black text-primary uppercase">{childName}</span>
+                      Para <span className="font-black text-primary uppercase">{currentPatient?.name || "el paciente"}</span>
                     </p>
                   </div>
                 </div>

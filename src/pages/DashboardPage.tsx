@@ -20,6 +20,7 @@ import AppLayout from "@/components/AppLayout";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
+import { usePatient } from "@/contexts/PatientContext";
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ArrowUpRight, Target } from "lucide-react";
@@ -35,10 +36,8 @@ export default function DashboardPage() {
     unreadAlerts: 0
   });
   const [loading, setLoading] = useState(true);
-  const [familiaId, setFamiliaId] = useState("");
-  const [childId, setChildId] = useState("");
-  const [childName, setChildName] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { currentPatient, currentPatientId, currentFamilyId } = usePatient();
 
   // Estados para Modal de Equipo
   const [showTeamModal, setShowTeamModal] = useState(false);
@@ -49,29 +48,22 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadDashboard = async () => {
+      if (!currentPatientId || !currentFamilyId) {
+        setLoading(false);
+        return;
+      }
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setCurrentUserId(user.id);
 
-      const { data: teamData } = await supabase
-        .from("equipo_pai")
-        .select("familia_id, persona_autismo_id, personas_autismo(full_name)")
-        .eq("user_id", user.id)
-        .limit(1);
+      const pid = currentPatientId;
 
-      if (teamData && teamData.length > 0) {
-        const fid = teamData[0].familia_id;
-        const pid = teamData[0].persona_autismo_id;
-        setFamiliaId(fid);
-        setChildId(pid);
-        // @ts-ignore
-        setChildName(teamData[0].personas_autismo?.full_name || "Hijo/a");
-
-        const [obs, goals, alts] = await Promise.all([
-          supabase.from("observaciones").select("id, fecha_observacion, intensidad_escala").eq("persona_autismo_id", pid).order("fecha_observacion", { ascending: true }).limit(30),
-          supabase.from("pai_goals").select("id", { count: "exact" }).eq("persona_autismo_id", pid).in("status", ["activo", "in_progress"]),
-          supabase.from("alertas").select("id, severidad, tipo, created_at, descripcion, registrado_por, creada_por, leida_por").eq("persona_autismo_id", pid).order("created_at", { ascending: false }).limit(10)
-        ]);
+      const [obs, goals, alts] = await Promise.all([
+        supabase.from("observaciones").select("id, fecha_observacion, intensidad_escala").eq("persona_autismo_id", pid).order("fecha_observacion", { ascending: true }).limit(30),
+        supabase.from("pai_goals").select("id", { count: "exact" }).eq("persona_autismo_id", pid).in("status", ["activo", "in_progress"]),
+        supabase.from("alertas").select("id, severidad, tipo, created_at, descripcion, registrado_por, creada_por, leida_por").eq("persona_autismo_id", pid).order("created_at", { ascending: false }).limit(10)
+      ]);
 
         // Filtrar alertas no leídas por el usuario actual
         const unread = alts.data?.filter(a => !a.leida_por?.includes(user.id)) || [];
@@ -122,7 +114,7 @@ export default function DashboardPage() {
           setIntensityData(radarChartData);
           setHeatmapData(heatmapChartData);
         }
-      }
+      
       setLoading(false);
     };
 
@@ -137,7 +129,7 @@ export default function DashboardPage() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [currentPatientId, currentFamilyId]);
 
   const handleBulkDismiss = async (type: 'non-critical' | 'critical' | 'all') => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -169,7 +161,7 @@ export default function DashboardPage() {
   };
 
   const seedDemoData = async () => {
-    if (!childId || !currentUserId) {
+    if (!currentPatientId || !currentUserId) {
       toast.error("No se pudo identificar al niño o usuario.");
       return;
     }
@@ -193,7 +185,7 @@ export default function DashboardPage() {
       const colReg = "registrado" + "_por";
 
       demoObservations.push({
-        persona_autismo_id: childId,
+        persona_autismo_id: currentPatientId,
         [colReg]: currentUserId,
         tipo: i % 3 === 0 ? "comportamiento" : (i % 3 === 1 ? "social" : "sensorial"),
         descripcion_texto: `Observación de prueba aleatoria #${i}`,
@@ -201,7 +193,7 @@ export default function DashboardPage() {
         sentimiento: ["feliz", "neutral", "ansioso", "enojado"][Math.floor(Math.random() * 4)],
         fecha_observacion: date.toISOString(),
         contexto: "Casa",
-        familia_id: familiaId
+        familia_id: currentFamilyId
       });
     }
 
@@ -250,11 +242,11 @@ export default function DashboardPage() {
 
   const handleOpenTeamModal = async () => {
     setShowTeamModal(true);
-    if (familiaId) {
+    if (currentFamilyId) {
       const { data } = await supabase
         .from("equipo_pai")
         .select("user_id, rol, invite_email")
-        .eq("familia_id", familiaId)
+        .eq("familia_id", currentFamilyId)
         .neq("user_id", currentUserId);
       if (data) setTeamMembers(data);
     }
@@ -268,8 +260,8 @@ export default function DashboardPage() {
     setSendingMsg(true);
     try {
       const { error } = await supabase.from("alertas").insert({
-        persona_autismo_id: childId,
-        familia_id: familiaId,
+        persona_autismo_id: currentPatientId,
+        familia_id: currentFamilyId,
         tipo: "sugerencia_estrategia", // Debe cumplir con el constraint CHECK
         severidad: "baja",
         descripcion: `Mensaje de equipo: ${messageText}`,
@@ -303,7 +295,7 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-responsive-h1 text-foreground leading-none mb-1">¡Hola de nuevo!</h1>
-            <p className="text-sm md:text-base text-muted-foreground font-medium">Seguimiento de <span className="text-primary font-bold">{childName}</span></p>
+            <p className="text-sm md:text-base text-muted-foreground font-medium">Seguimiento de <span className="text-primary font-bold">{currentPatient?.name || "Cargando..."}</span></p>
           </div>
           <Link to="/observations/new" className="w-full sm:w-auto">
             <Button className="w-full sm:w-auto h-14 px-8 rounded-2xl bg-primary shadow-xl shadow-primary/20 font-black text-xs uppercase tracking-widest gap-2">
@@ -548,7 +540,7 @@ export default function DashboardPage() {
             <div className="bg-primary rounded-[32px] p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
               <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
               <h3 className="text-xl font-black mb-2 tracking-tight leading-tight">Estado del Plan de Acción Integral</h3>
-              <p className="text-xs text-white/80 font-medium mb-6">El Plan de Acción Integral tiene {stats.activeGoals} objetivos en curso para {childName}.</p>
+              <p className="text-xs text-white/80 font-medium mb-6">El Plan de Acción Integral tiene {stats.activeGoals} objetivos en curso para {currentPatient?.name || "el paciente"}.</p>
               <Link to="/goals">
                 <Button className="w-full bg-white text-primary hover:bg-white/90 rounded-2xl h-12 font-black text-[10px] uppercase tracking-widest shadow-xl">
                   Gestionar Objetivos

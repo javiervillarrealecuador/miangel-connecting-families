@@ -6,6 +6,7 @@ import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
 import { Bell, Loader2 } from "lucide-react";
 import AlertCard from "@/components/AlertCard";
+import { usePatient } from "@/contexts/PatientContext";
 
 export default function AlertsPage() {
   const [unreadAlerts, setUnreadAlerts] = useState<any[]>([]);
@@ -27,42 +28,35 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { currentPatientId, currentFamilyId } = usePatient();
 
   useEffect(() => {
     const init = async () => {
+      if (!currentPatientId) return;
       setLoading(true);
       await loadCounts();
       await loadAlertsPage("unread", 0, false);
       setLoading(false);
     };
     init();
-  }, []);
+  }, [currentPatientId]);
 
   const loadCounts = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user || !currentFamilyId || !currentPatientId) return;
     setCurrentUserId(user.id);
 
-    const { data: teamData } = await supabase
-      .from("equipo_pai")
-      .select("familia_id")
-      .eq("user_id", user.id);
-
-    if (teamData && teamData.length > 0) {
-      const fIds = teamData.map(t => t.familia_id);
-      
-      const [{ count: unread }, { count: critical }, { count: all }] = await Promise.all([
-        supabase.from("alertas").select("id", { count: 'exact', head: true }).in("familia_id", fIds).or(`leida_por.is.null,not.leida_por.cs.{"${user.id}"}`),
-        supabase.from("alertas").select("id", { count: 'exact', head: true }).in("familia_id", fIds).eq("severidad", "critica"),
-        supabase.from("alertas").select("id", { count: 'exact', head: true }).in("familia_id", fIds)
-      ]);
-      
-      setCounts({
-        unread: unread || 0,
-        critical: critical || 0,
-        all: all || 0
-      });
-    }
+    const [{ count: unread }, { count: critical }, { count: all }] = await Promise.all([
+      supabase.from("alertas").select("id", { count: 'exact', head: true }).eq("familia_id", currentFamilyId).eq("persona_autismo_id", currentPatientId).or(`leida_por.is.null,not.leida_por.cs.{"${user.id}"}`),
+      supabase.from("alertas").select("id", { count: 'exact', head: true }).eq("familia_id", currentFamilyId).eq("persona_autismo_id", currentPatientId).eq("severidad", "critica"),
+      supabase.from("alertas").select("id", { count: 'exact', head: true }).eq("familia_id", currentFamilyId).eq("persona_autismo_id", currentPatientId)
+    ]);
+    
+    setCounts({
+      unread: unread || 0,
+      critical: critical || 0,
+      all: all || 0
+    });
   };
 
   const loadAlertsPage = async (category: "unread" | "critical" | "all", pageIndex: number = 0, append: boolean = false) => {
@@ -72,58 +66,51 @@ export default function AlertsPage() {
       setLoadingMore(true);
     }
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    if (!user || !currentFamilyId || !currentPatientId) {
       setLoading(false);
       setLoadingMore(false);
       return;
     }
     setCurrentUserId(user.id);
 
-    const { data: teamData } = await supabase
-      .from("equipo_pai")
-      .select("familia_id")
-      .eq("user_id", user.id);
+    const PAGE_SIZE = 20;
+    const from = pageIndex * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
 
-    if (teamData && teamData.length > 0) {
-      const fIds = teamData.map(t => t.familia_id);
-      
-      const PAGE_SIZE = 20;
-      const from = pageIndex * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+    let queryBuilder = supabase
+      .from("alertas")
+      .select("id, severidad, created_at, tipo, descripcion, accion_sugerida, leida_por, familia_id")
+      .eq("familia_id", currentFamilyId)
+      .eq("persona_autismo_id", currentPatientId)
+      .order("created_at", { ascending: false });
 
-      let queryBuilder = supabase
-        .from("alertas")
-        .select("id, severidad, created_at, tipo, descripcion, accion_sugerida, leida_por, familia_id")
-        .in("familia_id", fIds)
-        .order("created_at", { ascending: false });
-
-      if (category === "unread") {
-        queryBuilder = queryBuilder.or(`leida_por.is.null,not.leida_por.cs.{"${user.id}"}`);
-      } else if (category === "critical") {
-        queryBuilder = queryBuilder.eq("severidad", "critica");
-      }
-
-      const { data: alerts, error } = await queryBuilder.range(from, to);
-
-      if (error) {
-        toast.error("Error al cargar alertas");
-      } else if (alerts) {
-        if (category === "unread") {
-          setUnreadAlerts(prev => append ? [...prev, ...alerts] : alerts);
-          setUnreadHasMore(alerts.length === PAGE_SIZE);
-          setUnreadPage(pageIndex);
-        } else if (category === "critical") {
-          setCriticalAlerts(prev => append ? [...prev, ...alerts] : alerts);
-          setCriticalHasMore(alerts.length === PAGE_SIZE);
-          setCriticalPage(pageIndex);
-        } else {
-          setAllAlerts(prev => append ? [...prev, ...alerts] : alerts);
-          setAllHasMore(alerts.length === PAGE_SIZE);
-          setAllPage(pageIndex);
-        }
-        setLoadedTabs(prev => ({ ...prev, [category]: true }));
-      }
+    if (category === "unread") {
+      queryBuilder = queryBuilder.or(`leida_por.is.null,not.leida_por.cs.{"${user.id}"}`);
+    } else if (category === "critical") {
+      queryBuilder = queryBuilder.eq("severidad", "critica");
     }
+
+    const { data: alerts, error } = await queryBuilder.range(from, to);
+
+    if (error) {
+      toast.error("Error al cargar alertas");
+    } else if (alerts) {
+      if (category === "unread") {
+        setUnreadAlerts(prev => append ? [...prev, ...alerts] : alerts);
+        setUnreadHasMore(alerts.length === PAGE_SIZE);
+        setUnreadPage(pageIndex);
+      } else if (category === "critical") {
+        setCriticalAlerts(prev => append ? [...prev, ...alerts] : alerts);
+        setCriticalHasMore(alerts.length === PAGE_SIZE);
+        setCriticalPage(pageIndex);
+      } else {
+        setAllAlerts(prev => append ? [...prev, ...alerts] : alerts);
+        setAllHasMore(alerts.length === PAGE_SIZE);
+        setAllPage(pageIndex);
+      }
+      setLoadedTabs(prev => ({ ...prev, [category]: true }));
+    }
+    
     setLoading(false);
     setLoadingMore(false);
   };
@@ -172,37 +159,25 @@ export default function AlertsPage() {
   const isRead = (alert: any) => alert.leida_por?.includes(currentUserId);
 
   const handleCreateTestAlert = async () => {
-    if (!currentUserId) return;
+    if (!currentUserId || !currentFamilyId || !currentPatientId) return;
     setLoading(true);
     
-    const { data: teamData } = await supabase
-      .from("equipo_pai")
-      .select("familia_id")
-      .eq("user_id", currentUserId)
-      .not("familia_id", "is", null)
-      .limit(1);
+    const { error } = await supabase.from("alertas").insert({
+      familia_id: currentFamilyId,
+      persona_autismo_id: currentPatientId,
+      tipo: "patron_detectado",
+      severidad: "critica",
+      descripcion: `ALERTA DE PRUEBA (${new Date().toLocaleTimeString()}): Conexión verificada.`,
+      accion_sugerida: "Si ves esto, el sistema de alertas está funcionando perfectamente."
+    });
 
-    if (teamData && teamData.length > 0) {
-      const targetFamilyId = teamData[0].familia_id;
-      
-      const { error } = await supabase.from("alertas").insert({
-        familia_id: targetFamilyId,
-        tipo: "patron_detectado",
-        severidad: "critica",
-        descripcion: `ALERTA DE PRUEBA (${new Date().toLocaleTimeString()}): Conexión verificada.`,
-        accion_sugerida: "Si ves esto, el sistema de alertas está funcionando perfectamente."
-      });
-
-      if (error) {
-        toast.error("Error RLS: No tienes permiso para insertar en la base de datos.");
-        console.error(error);
-      } else {
-        toast.success("¡Alerta creada con éxito!");
-        await loadCounts();
-        await loadAlertsPage(activeTab as any, 0, false);
-      }
+    if (error) {
+      toast.error("Error RLS: No tienes permiso para insertar en la base de datos.");
+      console.error(error);
     } else {
-      toast.error("No se encontró familia_id. ¿Terminaste el onboarding?");
+      toast.success("¡Alerta creada con éxito!");
+      await loadCounts();
+      await loadAlertsPage(activeTab as any, 0, false);
     }
     setLoading(false);
   };

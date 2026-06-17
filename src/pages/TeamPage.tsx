@@ -9,13 +9,12 @@ import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Check, X, Shield, Settings2, UserPlus, Mail, Phone, Briefcase } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { usePatient } from "@/contexts/PatientContext";
 
 export default function TeamPage() {
   const [team, setTeam] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [childName, setChildName] = useState("");
-  const [familiaId, setFamiliaId] = useState("");
-  const [childId, setChildId] = useState("");
+  const { currentPatient, currentPatientId, currentFamilyId } = usePatient();
   const [showInvite, setShowInvite] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [myTeamId, setMyTeamId] = useState("");
@@ -45,36 +44,36 @@ export default function TeamPage() {
   };
 
   useEffect(() => {
-    loadTeam();
-  }, []);
+    if (currentPatientId) {
+      loadTeam();
+    }
+  }, [currentPatientId]);
 
   const loadTeam = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user || !currentPatientId || !currentFamilyId) {
+      setLoading(false);
+      return;
+    }
 
     const { data: myTeam } = await supabase
       .from("equipo_pai")
-      .select("id, familia_id, persona_autismo_id, rol, personas_autismo(full_name)")
+      .select("id, rol")
       .eq("user_id", user.id)
-      .limit(1);
+      .eq("persona_autismo_id", currentPatientId)
+      .maybeSingle();
 
-    if (myTeam && myTeam.length > 0) {
-      setMyTeamId(myTeam[0].id);
-      const fid = myTeam[0].familia_id;
-      const pid = myTeam[0].persona_autismo_id;
-      const role = myTeam[0].rol;
-      setFamiliaId(fid);
-      setChildId(pid);
-      // @ts-ignore
-      setChildName(myTeam[0].personas_autismo?.full_name || "Hijo/a");
+    if (myTeam) {
+      setMyTeamId(myTeam.id);
+      const role = myTeam.rol;
 
       // Validar si es propietario real consultando la tabla familias
       const { data: familyInfo } = await supabase
         .from("familias")
         .select("propietario_id")
-        .eq("id", fid)
-        .single();
+        .eq("id", currentFamilyId)
+        .maybeSingle();
         
       const isOwner = familyInfo?.propietario_id === user.id;
 
@@ -84,7 +83,7 @@ export default function TeamPage() {
       const { data: teamData } = await supabase
         .from("equipo_pai")
         .select("id, user_id, familia_id, persona_autismo_id, rol, specialty, invite_email, invite_status, puede_ver_observaciones, puede_crear_observaciones, puede_ver_objetivos, puede_editar_objetivos")
-        .eq("familia_id", fid)
+        .eq("persona_autismo_id", currentPatientId)
         .order("created_at", { ascending: true });
 
       if (teamData) {
@@ -142,8 +141,8 @@ export default function TeamPage() {
       const { data, error } = await supabase
         .from("equipo_pai")
         .insert({
-          familia_id: familiaId,
-          persona_autismo_id: childId,
+          familia_id: currentFamilyId,
+          persona_autismo_id: currentPatientId,
           rol: invRole,
           specialty: invSpecialty,
           invite_email: invEmail,
@@ -160,7 +159,7 @@ export default function TeamPage() {
       
       // Send email via edge function
       const { error: fnError } = await supabase.functions.invoke('send-invitation', {
-        body: { email: invEmail, role: invRole, childName: childName, inviterName: inviterName }
+        body: { email: invEmail, role: invRole, childName: currentPatient?.name || "el paciente", inviterName: inviterName }
       });
 
       if (fnError) {
@@ -233,7 +232,7 @@ export default function TeamPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-responsive-h1 text-foreground leading-none mb-1">Mi Equipo</h1>
-            <p className="text-sm md:text-base text-muted-foreground font-medium">Profesionales y familia apoyando a {childName}</p>
+            <p className="text-sm md:text-base text-muted-foreground font-medium">Profesionales y familia apoyando a {currentPatient?.name || "el paciente"}</p>
           </div>
           {isAdmin && (
             <Button className="w-full sm:w-auto h-14 px-8 rounded-2xl bg-primary shadow-xl shadow-primary/20 font-black text-xs uppercase tracking-widest gap-2" onClick={() => setShowInvite(true)}>
@@ -324,7 +323,7 @@ export default function TeamPage() {
                   </div>
                   Invitar al Equipo
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground font-medium mt-2">Sincroniza el apoyo de {childName} con especialistas.</p>
+                <p className="text-sm text-muted-foreground font-medium mt-2">Sincroniza el apoyo de {currentPatient?.name || "el paciente"} con especialistas.</p>
               </DialogHeader>
             </div>
 

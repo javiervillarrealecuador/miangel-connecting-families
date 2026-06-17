@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
+import { usePatient } from "@/contexts/PatientContext";
 import { 
   User, Baby, Bell, ShieldCheck, Save, Activity, Heart, Brain, School, Users, Dna, Loader2, ChevronRight, Dog, BookOpen, Star, Sparkles, MessageSquare, Lock
 } from "lucide-react";
@@ -119,10 +120,13 @@ export default function SettingsPage() {
   const [receiveAlerts, setReceiveAlerts] = useState(true);
   const [alertMethods, setAlertMethods] = useState(["app", "email"]);
   const [minSeverity, setMinSeverity] = useState([2]);
+  const { currentPatientId } = usePatient();
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    if (currentPatientId) {
+      loadProfile();
+    }
+  }, [currentPatientId]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -148,16 +152,17 @@ export default function SettingsPage() {
       .from("equipo_pai")
       .select("id, persona_autismo_id, recibir_alertas, metodos_alerta, sensibilidad_minima")
       .eq("user_id", user.id)
-      .limit(1);
+      .eq("persona_autismo_id", currentPatientId)
+      .maybeSingle();
 
-    if (teamData && teamData.length > 0) {
-      setTeamId(teamData[0].id);
-      if (teamData[0].recibir_alertas !== null) setReceiveAlerts(teamData[0].recibir_alertas);
-      if (teamData[0].metodos_alerta) setAlertMethods(teamData[0].metodos_alerta);
-      if (teamData[0].sensibilidad_minima !== null) setMinSeverity([teamData[0].sensibilidad_minima]);
+    if (teamData) {
+      setTeamId(teamData.id);
+      if (teamData.recibir_alertas !== null) setReceiveAlerts(teamData.recibir_alertas);
+      if (teamData.metodos_alerta) setAlertMethods(teamData.metodos_alerta);
+      if (teamData.sensibilidad_minima !== null) setMinSeverity([teamData.sensibilidad_minima]);
 
-      if (teamData[0].persona_autismo_id) {
-        const pId = teamData[0].persona_autismo_id;
+      if (teamData.persona_autismo_id) {
+        const pId = teamData.persona_autismo_id;
         const { data: cData } = await supabase
         .from("personas_autismo")
         .select(`
@@ -201,7 +206,7 @@ export default function SettingsPage() {
             : (Array.isArray(cData.interaccion_animales) ? cData.interaccion_animales : []),
         }));
       }
-    }
+      }
     }
     setLoading(false);
   };

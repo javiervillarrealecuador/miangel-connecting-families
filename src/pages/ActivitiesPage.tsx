@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
+import { usePatient } from "@/contexts/PatientContext";
 
 export default function ActivitiesPage() {
   // -------------------------------------------------------------------
@@ -42,11 +43,10 @@ export default function ActivitiesPage() {
   const [rating, setRating] = useState([3]);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [childId, setChildId] = useState("");
   const [userId, setUserId] = useState("");
   const [rawN8nData, setRawN8nData] = useState<any>(null);
   const [userRole, setUserRole] = useState("");
-  const [familiaId, setFamiliaId] = useState("");
+  const { currentPatientId, currentFamilyId } = usePatient();
   const [guideOpen, setGuideOpen] = useState(false);
   const [practiceActivity, setPracticeActivity] = useState<any>(null);
 
@@ -57,22 +57,23 @@ export default function ActivitiesPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUserId(user.id);
-        supabase
-          .from("equipo_pai")
-          .select("persona_autismo_id, familia_id, rol")
-          .eq("user_id", user.id)
-          .limit(1)
-          .then(({ data }) => {
-            if (data?.[0]) {
-              setChildId(data[0].persona_autismo_id);
-              setFamiliaId(data[0].familia_id || "");
-              setUserRole(data[0].rol || "");
-              fetchActiveGoals(data[0].persona_autismo_id);
-            }
-          });
+        if (currentPatientId) {
+          supabase
+            .from("equipo_pai")
+            .select("rol")
+            .eq("user_id", user.id)
+            .eq("persona_autismo_id", currentPatientId)
+            .maybeSingle()
+            .then(({ data }) => {
+              if (data) {
+                setUserRole(data.rol || "");
+              }
+            });
+          fetchActiveGoals(currentPatientId);
+        }
       }
     });
-  }, []);
+  }, [currentPatientId]);
 
   const fetchActiveGoals = async (cid: string) => {
     const { data } = await supabase
@@ -180,13 +181,13 @@ export default function ActivitiesPage() {
       const payload = {
         ubicacion: query,
         objetivo: selectedGoal._sinObjetivo ? "Control de situación (sin objetivo específico)" : selectedGoal.title,
-        persona_autismo_id: childId,
+        persona_autismo_id: currentPatientId,
         sin_objetivo: selectedGoal._sinObjetivo || false,
         // Legacy fields for compatibility
         contexto: query,
         objetivo_id: selectedGoal._sinObjetivo ? null : selectedGoal.id,
         objetivo_titulo: selectedGoal._sinObjetivo ? "Control de situación" : selectedGoal.title,
-        child_id: childId,
+        child_id: currentPatientId,
         user_id: userId,
       };
       const testUrl = getWebhookUrl("test");
@@ -291,8 +292,8 @@ export default function ActivitiesPage() {
       return "social";
     };
     const obsPayload = {
-      familia_id: familiaId || selectedGoal?.familia_id,
-      persona_autismo_id: childId,
+      familia_id: currentFamilyId || selectedGoal?.familia_id,
+      persona_autismo_id: currentPatientId,
       registrado_por: userId,
       tipo: areaMap(selectedGoal?.area || activity.area || "social"),
       descripcion_texto: `[LOGRO] Actividad "${activity.nombre}" completada.\n${activity.descripcion}\nEfectividad: ${rating[0]}/5`,

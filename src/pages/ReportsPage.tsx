@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { usePatient } from "@/contexts/PatientContext";
 
 const ScaleBar = ({ value, max = 5 }: { value: number; max?: number }) => (
   <div className="flex gap-1 mt-1">
@@ -48,26 +49,24 @@ export default function ReportsPage() {
   const [summaries, setSummaries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const { currentPatientId } = usePatient();
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: teamData } = await supabase
-        .from("equipo_pai")
-        .select("persona_autismo_id")
-        .eq("user_id", user.id)
-        .limit(1);
-
-      const pId = teamData?.[0]?.persona_autismo_id;
+      const pId = currentPatientId;
       if (!pId) { setLoading(false); return; }
 
       const [{ data: cData }, { data: items }, { data: obsData }, { data: sumData }] = await Promise.all([
         supabase.from("personas_autismo").select(`
           id, familia_id, full_name, birth_date, nivel_apoyo, identidad_genero, nacionalidad, ciudad_provincia,
           nombre_madre, telefono_madre, nombre_padre, telefono_padre, circulo_interaccion,
-          tipo_escolaridad, nombre_establecimiento, anio_escolar, nombre_profesor, telefono_profesor, profesor_sombra
+          tipo_escolaridad, nombre_establecimiento, anio_escolar, nombre_profesor, telefono_profesor, profesor_sombra,
+          lenguaje_expresivo, lenguaje_receptivo, sensorial_auditiva, sensorial_visual, sensorial_tactil, sensorial_propioceptiva, sensorial_vestibular,
+          cd_autoagresion, cd_berrinches, cd_fuga, cd_destruccion,
+          habilidades_sociales, comorbilidades, materias_interes, dificultades_comunicacion, habilidades_comunicativas
         `).eq("id", pId).single(),
         supabase.from("persona_perfil_items").select("catalogos(categoria, nombre)").eq("persona_id", pId),
         supabase.from("observaciones")
@@ -96,8 +95,10 @@ export default function ReportsPage() {
       setProfileItems(catalog);
       setLoading(false);
     };
-    load();
-  }, []);
+    if (currentPatientId) {
+      load();
+    }
+  }, [currentPatientId]);
 
   const handleGenerateAI = async () => {
     if (!childData?.id) {

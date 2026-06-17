@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { usePatient } from "@/contexts/PatientContext";
 
 const navItems = [
   { label: "Centro de control", icon: LayoutDashboard, path: "/dashboard", description: "Vista general de tu cuenta, progreso y notificaciones." },
@@ -12,7 +13,7 @@ const navItems = [
   { label: "Objetivos propuestos", icon: Target, path: "/goals", description: "Define y haz seguimiento a las metas de desarrollo personal." },
   { label: "Recomendaciones con IA inmediatas", icon: Palette, path: "/activities/search", description: "Obtén actividades y estrategias sugeridas al instante por Inteligencia Artificial." },
   { label: "Guías de Apoyo", icon: CheckSquare, path: "/documents", description: "Accede a recursos, plantillas y guías educativas." },
-  { label: "Consultar Equipo", icon: Users, path: "/team", description: "Gestiona a los profesionales y familiares involucrados en el acompañamiento." },
+  { label: "Incluir otras personas al equipo", icon: Users, path: "/team", description: "Gestiona a los profesionales y familiares involucrados en el acompañamiento." },
   { label: "Reportes", icon: FileText, path: "/reports", description: "Visualiza estadísticas y documentos de la evolución en el tiempo." },
   { label: "Ajustes", icon: Settings, path: "/settings", description: "Configura las preferencias de tu cuenta y el perfil." },
 ];
@@ -22,8 +23,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [userName, setUserName] = useState("Usuario");
-  const [childData, setChildData] = useState({ name: "Cargando...", age: "?" });
   const [unreadAlerts, setUnreadAlerts] = useState(0);
+  const { patients, currentPatient, currentFamilyId, switchPatient } = usePatient();
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,48 +33,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       
       setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Usuario");
 
-      const { data: teamData } = await supabase
-        .from("equipo_pai")
-        .select("persona_autismo_id, familia_id")
-        .eq("user_id", user.id)
-        .limit(1);
-
-      if (teamData && teamData.length > 0 && teamData[0].persona_autismo_id) {
-        const { data: cData } = await supabase
-          .from("personas_autismo")
-          .select("full_name, birth_date")
-          .eq("id", teamData[0].persona_autismo_id)
-          .single();
-
-        if (cData) {
-          let age: string | number = "?";
-          if (cData.birth_date) {
-            const birth = new Date(cData.birth_date);
-            const today = new Date();
-            let calculatedAge = today.getFullYear() - birth.getFullYear();
-            const m = today.getMonth() - birth.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-              calculatedAge--;
-            }
-            age = calculatedAge;
-          }
-          setChildData({ name: cData.full_name, age: age.toString() });
-        }
-
+      if (currentFamilyId) {
         // Cargar alertas no leídas
         const { count } = await supabase
           .from("alertas")
           .select("id", { count: 'exact', head: true })
-          .eq("familia_id", teamData[0].familia_id)
+          .eq("familia_id", currentFamilyId)
           .eq("leida", false);
         
         setUnreadAlerts(count || 0);
-      } else {
-        setChildData({ name: "SIN PERFIL", age: "-" });
       }
     };
     loadData();
-  }, []);
+  }, [currentFamilyId]);
+
+  const childName = currentPatient ? currentPatient.name : "SIN PERFIL";
+  
+  let childAge: string | number = "?";
+  if (currentPatient && currentPatient.birth_date) {
+    const birth = new Date(currentPatient.birth_date);
+    const today = new Date();
+    let calculatedAge = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      calculatedAge--;
+    }
+    childAge = calculatedAge;
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -106,9 +92,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {/* Child Profile Card */}
+        {/* Child Profile Card / Selector */}
         <div className="px-6 mb-8">
-          {childData.name === "SIN PERFIL" ? (
+          {patients.length > 0 ? (
+            <div className="bg-white/10 backdrop-blur-md rounded-[24px] p-3 border border-white/10">
+              <label className="text-white/60 text-[10px] font-bold uppercase tracking-widest px-2 mb-1 block">Selecciona el Paciente</label>
+              <select 
+                className="w-full bg-white/20 text-white rounded-xl h-12 px-3 outline-none border border-white/20 appearance-none font-black cursor-pointer shadow-inner truncate mb-2"
+                value={currentPatient?.persona_autismo_id || ""}
+                onChange={(e) => switchPatient(e.target.value)}
+              >
+                {patients.map(p => (
+                  <option key={p.persona_autismo_id} value={p.persona_autismo_id} className="text-slate-900 font-bold">
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <Link to="/onboarding/create-child" onClick={() => setSidebarOpen(false)} className="w-full h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-xl text-white/80 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors border border-white/10">
+                + Nuevo Paciente
+              </Link>
+            </div>
+          ) : (
             <Link to="/onboarding/create-child" onClick={() => setSidebarOpen(false)} className="block bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md rounded-[24px] p-5 border border-white/10 cursor-pointer">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner">
@@ -116,19 +120,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-black text-sm truncate uppercase tracking-tight">SIN PERFIL</p>
-                  <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mt-0.5">Ingresa el perfil del Autista</p>
-                </div>
-              </div>
-            </Link>
-          ) : (
-            <Link to="/settings?tab=child" onClick={() => setSidebarOpen(false)} className="block bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-md rounded-[24px] p-5 border border-white/10 cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-lg border border-white/20 shadow-inner overflow-hidden">
-                  <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=150&h=150&fit=crop&crop=faces&q=80" alt="Avatar" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-black text-sm truncate uppercase tracking-tight">{childData.name}</p>
-                  <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">{childData.age} años</p>
+                  <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest mt-0.5">Ingresa el perfil</p>
                 </div>
               </div>
             </Link>
@@ -145,18 +137,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                  to={item.path}
                  title={item.description}
                  onClick={() => setSidebarOpen(false)}
-                 className={`flex items-center gap-4 px-6 h-14 rounded-[20px] transition-all duration-400 group relative ${
+                 className={`flex items-center gap-4 px-6 py-3 min-h-[3.5rem] h-auto rounded-[20px] transition-all duration-400 group relative ${
                    active
                      ? "bg-white text-primary shadow-2xl shadow-black/20 scale-[1.02]"
                      : "text-white/80 hover:bg-white/10 hover:text-white hover:translate-x-1"
                  }`}
                >
-                 <item.icon size={22} className={active ? "text-primary" : "text-white/40 group-hover:text-white transition-colors"} />
-                 <span className={`text-[11px] font-black uppercase tracking-[0.15em] ${active ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`}>
-                   {item.label}
-                 </span>
+                 <item.icon size={22} className={active ? "text-primary" : "text-white/40 group-hover:text-white transition-colors shrink-0"} />
+                 <div className="flex flex-col flex-1 pr-2">
+                   <span className={`text-[11px] font-black uppercase tracking-[0.15em] ${active ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`}>
+                     {item.label}
+                   </span>
+                   <span className={`text-[9px] font-medium leading-tight mt-0.5 block lg:hidden ${active ? "text-primary/70" : "text-white/50"}`}>
+                     {item.description}
+                   </span>
+                 </div>
                  {active && (
-                   <div className="absolute right-4 w-1.5 h-1.5 bg-primary rounded-full" />
+                   <div className="absolute right-4 w-1.5 h-1.5 bg-primary rounded-full shrink-0" />
                  )}
                </Link>
             );

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Mic, X, Smile, Frown, Meh, Angry, Wind, Info, Loader2, Target, TrendingUp, Sparkles } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
+import { usePatient } from "@/contexts/PatientContext";
 
 const obsTypes = [
   { id: "lenguaje", label: "Lenguaje", icon: "🗣️" },
@@ -29,8 +30,7 @@ export default function NewObservationPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
-  const [childId, setChildId] = useState("");
-  const [familiaId, setFamiliaId] = useState("");
+  const { currentPatientId, currentFamilyId } = usePatient();
   const [type, setType] = useState("");
   const [context, setContext] = useState("");
   const [description, setDescription] = useState("");
@@ -47,41 +47,42 @@ export default function NewObservationPage() {
   const [progressImpact, setProgressImpact] = useState(5); // Escala 1-10
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (currentPatientId) {
+      loadData();
+    }
+  }, [currentPatientId]);
 
   const loadData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || !currentPatientId || !currentFamilyId) return;
       
       const { data: teamData } = await supabase
         .from("equipo_pai")
-        .select("persona_autismo_id, familia_id, rol, specialty, puede_crear_observaciones")
+        .select("rol, puede_crear_observaciones")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("persona_autismo_id", currentPatientId)
+        .maybeSingle();
 
-      if (teamData && teamData.length > 0) {
-        const myRecord = teamData[0];
-        setChildId(myRecord.persona_autismo_id);
-        setFamiliaId(myRecord.familia_id);
-        setUserRole(myRecord.rol);
-        setCanCreate(myRecord.puede_crear_observaciones !== false);
+      if (teamData) {
+        setUserRole(teamData.rol);
+        setCanCreate(teamData.puede_crear_observaciones !== false);
+      }
 
-        // NUEVO: Cargar IDs de todos los miembros del equipo para 'enviado_a'
-        const { data: allTeam } = await supabase
-          .from("equipo_pai")
-          .select("user_id")
-          .eq("persona_autismo_id", myRecord.persona_autismo_id);
-        
-        const teamIds = (allTeam || []).map(m => m.user_id).filter(id => id !== user.id);
+      // NUEVO: Cargar IDs de todos los miembros del equipo para 'enviado_a'
+      const { data: allTeam } = await supabase
+        .from("equipo_pai")
+        .select("user_id")
+        .eq("persona_autismo_id", currentPatientId);
+      
+      const teamIds = (allTeam || []).map(m => m.user_id).filter(id => id !== user.id);
         (window as any).teamIdsForAlert = teamIds;
 
         // Cargar objetivos para el dropdown (incluyendo completados para que no desaparezcan al editar)
         const { data: goalsData } = await supabase
           .from("pai_goals")
           .select("id, title, status")
-          .eq("persona_autismo_id", myRecord.persona_autismo_id)
+          .eq("persona_autismo_id", currentPatientId)
           .in("status", ["activo", "in_progress", "completed"]);
         
         setGoals(goalsData || []);
@@ -134,7 +135,6 @@ export default function NewObservationPage() {
             }
           }
         }
-      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -159,8 +159,8 @@ export default function NewObservationPage() {
       const colInt = "intensidad" + "_escala";
 
       const obsPayload = {
-        familia_id: familiaId,
-        persona_autismo_id: childId,
+        familia_id: currentFamilyId,
+        persona_autismo_id: currentPatientId,
         [colReg]: user?.id,
         tipo: type,
         descripcion_texto: description,
@@ -224,8 +224,8 @@ export default function NewObservationPage() {
         const teamToNotify = (window as any).teamIdsForAlert || [];
         
         await supabase.from("alertas").insert({
-          familia_id: familiaId,
-          persona_autismo_id: childId,
+          familia_id: currentFamilyId,
+          persona_autismo_id: currentPatientId,
           tipo: isCritical ? 'cambio_comportamiento' : 'nueva_observacion',
           descripcion: `[${type.toUpperCase()}] ${description.substring(0, 100)}...`,
           severidad: isCritical ? 'critica' : 'alta',

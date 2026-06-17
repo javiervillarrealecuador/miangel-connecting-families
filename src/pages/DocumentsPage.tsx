@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
+import { usePatient } from "@/contexts/PatientContext";
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<any[]>([]);
@@ -14,30 +15,15 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [libLoading, setLibLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [childId, setChildId] = useState("");
-  const [familiaId, setFamiliaId] = useState("");
+  const { currentPatientId } = usePatient();
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        const { data: teamData } = await supabase
-          .from("equipo_pai")
-          .select("persona_autismo_id, familia_id")
-          .eq("user_id", user.id)
-          .limit(1);
-
-        if (teamData && teamData.length > 0) {
-          setChildId(teamData[0].persona_autismo_id);
-          setFamiliaId(teamData[0].familia_id);
-          fetchDocuments(teamData[0].persona_autismo_id);
-        } else {
-          setLoading(false);
-        }
-      }
-    });
+    if (currentPatientId) {
+      fetchDocuments(currentPatientId);
+    }
     fetchLibrary();
-  }, []);
+  }, [currentPatientId]);
 
   const fetchLibrary = async () => {
     try {
@@ -86,14 +72,14 @@ export default function DocumentsPage() {
       return;
     }
     
-    if (!childId) {
-      toast.error("No se encontró el perfil del niño.");
+    if (!currentPatientId) {
+      toast.error("No se encontró el perfil del paciente.");
       return;
     }
 
     setUploading(true);
     
-    const filePath = `${childId}/${Date.now()}_${file.name}`;
+    const filePath = `${currentPatientId}/${Date.now()}_${file.name}`;
     
     const { data, error } = await supabase.storage
       .from("documentos_medicos")
@@ -108,7 +94,7 @@ export default function DocumentsPage() {
       }
     } else {
       toast.success("Documento subido correctamente. La IA ha sido notificada.");
-      fetchDocuments(childId); // Recargar la lista
+      fetchDocuments(currentPatientId); // Recargar la lista
     }
     
     setUploading(false);
@@ -119,7 +105,7 @@ export default function DocumentsPage() {
   const handleDelete = async (fileName: string) => {
     const { error } = await supabase.storage
       .from("documentos_medicos")
-      .remove([`${childId}/${fileName}`]);
+      .remove([`${currentPatientId}/${fileName}`]);
 
     if (error) {
       toast.error("Error al eliminar");
@@ -141,7 +127,7 @@ export default function DocumentsPage() {
     try {
       const { data, error } = await supabase.storage
         .from("documentos_medicos")
-        .createSignedUrl(`${childId}/${fileName}`, 60); // URL válida por 60 segundos
+        .createSignedUrl(`${currentPatientId}/${fileName}`, 60); // URL válida por 60 segundos
 
       if (error) {
         toast.error("Error al obtener el enlace de descarga");

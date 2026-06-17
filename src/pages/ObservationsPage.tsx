@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
 import ObservationCard from "@/components/ObservationCard";
+import { usePatient } from "@/contexts/PatientContext";
 
 const typeOptions = ["Lenguaje", "Social", "Motor", "Comportamiento", "Sensorial", "Adaptativo"];
 
@@ -32,12 +33,15 @@ export default function ObservationsPage() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const { currentPatientId } = usePatient();
 
   useEffect(() => {
     setPage(0);
     setHasMore(true);
-    loadObservations(0, false, typeFilter);
-  }, [typeFilter]);
+    if (currentPatientId) {
+      loadObservations(0, false, typeFilter);
+    }
+  }, [typeFilter, currentPatientId]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -79,18 +83,12 @@ export default function ObservationsPage() {
       return;
     }
 
-    const { data: teamData } = await supabase
-      .from("equipo_pai")
-      .select("persona_autismo_id")
-      .eq("user_id", user.id);
-      
-    if (teamData && teamData.length > 0) {
-      const pIds = teamData.map(t => t.persona_autismo_id).filter(id => !!id);
-      if (pIds.length === 0) {
-        setLoading(false);
-        setLoadingMore(false);
-        return;
-      }
+    const pIds = currentPatientId ? [currentPatientId] : [];
+    if (pIds.length === 0) {
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
       
       const PAGE_SIZE = 20;
       const from = pageIndex * PAGE_SIZE;
@@ -166,7 +164,7 @@ export default function ObservationsPage() {
           setTeamMembersMap(map);
         }
       }
-    }
+    
     setLoading(false);
     setLoadingMore(false);
   };
