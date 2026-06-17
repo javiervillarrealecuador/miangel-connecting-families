@@ -317,7 +317,7 @@ export default function TeamPage() {
 
         {/* Modal Invitación - Ultra Responsive */}
         <Dialog open={showInvite} onOpenChange={(val) => { setShowInvite(val); if(!val) setInviteSuccessData(null); }}>
-          <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl rounded-[32px]">
+          <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl rounded-[32px] flex flex-col max-h-[90vh]">
             {inviteSuccessData ? (
               <div className="p-8 text-center space-y-6">
                 <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
@@ -376,7 +376,7 @@ export default function TeamPage() {
                   </DialogHeader>
                 </div>
 
-                <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { id: "Padre", label: "Familia", icon: "🏠" },
@@ -423,7 +423,7 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                <DialogFooter className="p-6 bg-slate-50 flex-col sm:flex-row gap-3">
+                <DialogFooter className="p-6 bg-slate-50 flex flex-col-reverse sm:flex-row gap-3 mt-auto shrink-0">
                   <Button variant="ghost" className="w-full sm:flex-1 h-12 rounded-xl font-black text-xs uppercase tracking-widest" onClick={() => setShowInvite(false)}>
                     Cerrar
                   </Button>
