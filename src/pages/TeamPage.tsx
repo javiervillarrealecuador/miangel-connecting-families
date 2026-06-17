@@ -16,7 +16,8 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const { currentPatient, currentPatientId, currentFamilyId } = usePatient();
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteSuccessData, setInviteSuccessData] = useState<{email: string, link: string} | null>(null);
+  const [inviteSuccessData, setInviteSuccessData] = useState<{email: string | null, link: string} | null>(null);
+  const [inviteMethod, setInviteMethod] = useState<"email" | "whatsapp">("email");
   const [isAdmin, setIsAdmin] = useState(false);
   const [myTeamId, setMyTeamId] = useState("");
   
@@ -131,8 +132,12 @@ export default function TeamPage() {
   };
 
   const handleInvite = async () => {
-    if (!invEmail || !invRole) {
-      toast.error("Por favor completa los campos obligatorios");
+    if (inviteMethod === "email" && !invEmail) {
+      toast.error("Por favor ingresa un correo electrónico");
+      return;
+    }
+    if (!invRole) {
+      toast.error("Por favor selecciona un rol");
       return;
     }
 
@@ -140,6 +145,7 @@ export default function TeamPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const inviterName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Un usuario";
+      const targetEmail = invEmail.trim() ? invEmail.trim() : null;
 
       const { data, error } = await supabase
         .from("equipo_pai")
@@ -148,7 +154,7 @@ export default function TeamPage() {
           persona_autismo_id: currentPatientId,
           rol: invRole,
           specialty: invSpecialty,
-          invite_email: invEmail,
+          invite_email: targetEmail,
           invite_status: "pendiente",
           puede_ver_observaciones: true,
           puede_crear_observaciones: invCanCreateObs,
@@ -160,19 +166,33 @@ export default function TeamPage() {
 
       if (error) throw error;
       
-      // Send email via edge function
-      const { error: fnError } = await supabase.functions.invoke('send-invitation', {
-        body: { email: invEmail, role: invRole, childName: currentPatient?.name || "el paciente", inviterName: inviterName }
-      });
+      const inviteId = data.id;
 
-      if (fnError) {
-        console.error("Error invoking send-invitation:", fnError);
+      // Generar link de invitación
+      let link = `${window.location.origin}/?invite_id=${inviteId}`;
+      if (targetEmail) {
+        link += `&email=${encodeURIComponent(targetEmail)}`;
       }
 
-      const link = `${window.location.origin}/?email=${encodeURIComponent(invEmail)}`;
-      setInviteSuccessData({ email: invEmail, link });
-      toast.success(`Miembro añadido correctamente.`);
+      if (inviteMethod === "email" && targetEmail) {
+        // Send email via edge function
+        const { error: fnError } = await supabase.functions.invoke('send-invitation', {
+          body: { email: targetEmail, role: invRole, childName: currentPatient?.name || "el paciente", inviterName: inviterName }
+        });
 
+        if (fnError) {
+          console.error("Error invoking send-invitation:", fnError);
+        }
+        toast.success(`Invitación enviada por correo.`);
+      } else {
+        // Flujo WhatsApp
+        const msg = `¡Hola! Te he invitado a unirte al equipo de ${currentPatient?.name || "mi paciente"} en mIAngel. Por favor, haz clic aquí para aceptar: ${link}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+        window.open(whatsappUrl, '_blank');
+        toast.success(`Enlace de invitación generado.`);
+      }
+
+      setInviteSuccessData({ email: targetEmail, link });
       loadTeam();
     } catch (error: any) {
       toast.error("Error al invitar: " + error.message);
@@ -326,7 +346,11 @@ export default function TeamPage() {
                 <div>
                   <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-2">¡Invitación Creada!</h2>
                   <p className="text-sm text-muted-foreground font-medium">
-                    El usuario <span className="font-bold text-foreground">{inviteSuccessData.email}</span> ha sido registrado en el equipo.
+                    {inviteSuccessData.email ? (
+                      <>El usuario <span className="font-bold text-foreground">{inviteSuccessData.email}</span> ha sido registrado en el equipo.</>
+                    ) : (
+                      <>La invitación para el equipo ha sido generada correctamente.</>
+                    )}
                   </p>
                 </div>
                 
@@ -351,7 +375,7 @@ export default function TeamPage() {
                     className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs uppercase tracking-widest gap-2 shadow-lg"
                     onClick={() => {
                       const msg = `¡Hola! Te he invitado a unirte al equipo de ${currentPatient?.name || "mi paciente"} en mIAngel. Por favor, haz clic aquí para aceptar: ${inviteSuccessData.link}`;
-                      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
                     }}
                   >
                     <MessageCircle size={18} /> Enviar por WhatsApp
@@ -377,6 +401,24 @@ export default function TeamPage() {
                 </div>
 
                 <div className="p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+                  {/* Selector de Método de Invitación */}
+                  <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setInviteMethod("email")}
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${inviteMethod === "email" ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <Mail size={16} /> Por Correo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInviteMethod("whatsapp")}
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${inviteMethod === "whatsapp" ? "bg-white text-[#25D366] shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <MessageCircle size={16} /> Por WhatsApp
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { id: "Padre", label: "Familia", icon: "🏠" },
@@ -393,8 +435,20 @@ export default function TeamPage() {
 
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Correo Electrónico</Label>
-                      <Input placeholder="correo@ejemplo.com" value={invEmail} onChange={e => setInvEmail(e.target.value)} className="h-12 rounded-2xl border-2 focus-visible:ring-primary/20" />
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                        {inviteMethod === "email" ? "Correo Electrónico" : "Correo Electrónico (Opcional)"}
+                      </Label>
+                      <Input 
+                        placeholder={inviteMethod === "email" ? "correo@ejemplo.com" : "correo@ejemplo.com (puedes dejarlo vacío)"} 
+                        value={invEmail} 
+                        onChange={e => setInvEmail(e.target.value)} 
+                        className="h-12 rounded-2xl border-2 focus-visible:ring-primary/20" 
+                      />
+                      {inviteMethod === "whatsapp" && (
+                        <p className="text-[10px] text-muted-foreground font-medium ml-1">
+                          Si no conoces su correo, déjalo vacío para generar un enlace de invitación general.
+                        </p>
+                      )}
                     </div>
                     {invRole && invRole !== "Padre" && (
                       <div className="animate-in fade-in slide-in-from-top-2">
@@ -427,9 +481,27 @@ export default function TeamPage() {
                   <Button variant="ghost" className="w-full sm:flex-1 h-12 rounded-xl font-black text-xs uppercase tracking-widest" onClick={() => setShowInvite(false)}>
                     Cerrar
                   </Button>
-                  <Button className="w-full sm:flex-1 h-12 rounded-xl bg-primary font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20" disabled={!invEmail || !invRole} onClick={handleInvite}>
-                    {loading ? <Loader2 className="animate-spin" /> : "Crear Invitación"}
-                  </Button>
+                  {inviteMethod === "email" ? (
+                    <Button 
+                      className="w-full sm:flex-1 h-12 rounded-xl bg-primary font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20" 
+                      disabled={!invEmail || !invRole || loading} 
+                      onClick={handleInvite}
+                    >
+                      {loading ? <Loader2 className="animate-spin" /> : "Crear Invitación"}
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full sm:flex-1 h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-2" 
+                      disabled={!invRole || loading} 
+                      onClick={handleInvite}
+                    >
+                      {loading ? <Loader2 className="animate-spin" /> : (
+                        <>
+                          <MessageCircle size={18} /> Enviar por WhatsApp
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </DialogFooter>
               </>
             )}

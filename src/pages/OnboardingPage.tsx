@@ -55,15 +55,36 @@ export default function OnboardingPage() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        const { data } = await supabase
-          .from("equipo_pai")
-          .select("id, rol, invite_email, invite_status, persona_autismo_id, per:personas_autismo(full_name)")
-          .ilike("invite_email", user.email)
-          .eq("invite_status", "pendiente")
-          .maybeSingle();
-        
-        if (data) setPendingInvite(data);
+      if (user) {
+        // Primero intentar buscar usando el pending_invite_id del localStorage
+        const storedInviteId = localStorage.getItem("pending_invite_id");
+        if (storedInviteId) {
+          const { data, error } = await supabase
+            .from("equipo_pai")
+            .select("id, rol, invite_email, invite_status, persona_autismo_id, per:personas_autismo(full_name)")
+            .eq("id", storedInviteId)
+            .eq("invite_status", "pendiente")
+            .maybeSingle();
+
+          if (data && !error) {
+            setPendingInvite(data);
+            localStorage.removeItem("pending_invite_id"); // Limpiar después de encontrarlo
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Si no hay id almacenado o no se encontró, buscar por email como alternativa
+        if (user.email) {
+          const { data } = await supabase
+            .from("equipo_pai")
+            .select("id, rol, invite_email, invite_status, persona_autismo_id, per:personas_autismo(full_name)")
+            .ilike("invite_email", user.email)
+            .eq("invite_status", "pendiente")
+            .maybeSingle();
+          
+          if (data) setPendingInvite(data);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -78,9 +99,18 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No session found");
 
+      const updateData: any = { 
+        user_id: user.id, 
+        invite_status: "activo", 
+        codigo_verificado_at: new Date().toISOString() 
+      };
+      if (user.email) {
+        updateData.invite_email = user.email;
+      }
+
       const { error } = await supabase
         .from("equipo_pai")
-        .update({ user_id: user.id, invite_status: "activo", codigo_verificado_at: new Date().toISOString() })
+        .update(updateData)
         .eq("id", pendingInvite.id);
       
       if (error) throw error;

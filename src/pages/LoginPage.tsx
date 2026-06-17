@@ -26,9 +26,18 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const email = params.get("email");
+    const inviteId = params.get("invite_id");
+    
+    if (inviteId) {
+      localStorage.setItem("pending_invite_id", inviteId);
+    }
+    
     if (email) {
       setRegEmail(email);
       setLoginEmail(email);
+      setTab("register");
+      toast.info("Por favor completa tu registro para unirte al equipo.");
+    } else if (inviteId) {
       setTab("register");
       toast.info("Por favor completa tu registro para unirte al equipo.");
     }
