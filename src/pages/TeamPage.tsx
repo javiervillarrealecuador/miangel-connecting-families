@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import AppLayout from "@/components/AppLayout";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Check, X, Shield, Settings2, UserPlus, Mail, Phone, Briefcase } from "lucide-react";
+import { Loader2, Check, X, Shield, Settings2, UserPlus, Mail, Phone, Briefcase, MessageCircle, Copy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { usePatient } from "@/contexts/PatientContext";
 
@@ -16,6 +16,7 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const { currentPatient, currentPatientId, currentFamilyId } = usePatient();
   const [showInvite, setShowInvite] = useState(false);
+  const [inviteSuccessData, setInviteSuccessData] = useState<{email: string, link: string} | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [myTeamId, setMyTeamId] = useState("");
   
@@ -164,12 +165,12 @@ export default function TeamPage() {
 
       if (fnError) {
         console.error("Error invoking send-invitation:", fnError);
-        toast.error("Miembro añadido, pero hubo un error enviando el correo.");
-      } else {
-        toast.success(`Invitación enviada a ${invEmail}`);
       }
 
-      setShowInvite(false);
+      const link = `${window.location.origin}/?email=${encodeURIComponent(invEmail)}`;
+      setInviteSuccessData({ email: invEmail, link });
+      toast.success(`Miembro añadido correctamente.`);
+
       loadTeam();
     } catch (error: any) {
       toast.error("Error al invitar: " + error.message);
@@ -313,75 +314,123 @@ export default function TeamPage() {
         )}
 
         {/* Modal Invitación - Ultra Responsive */}
-        <Dialog open={showInvite} onOpenChange={setShowInvite}>
+        <Dialog open={showInvite} onOpenChange={(val) => { setShowInvite(val); if(!val) setInviteSuccessData(null); }}>
           <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl rounded-[32px]">
-            <div className="bg-primary/5 p-6 border-b border-primary/10">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-black text-primary uppercase tracking-tighter flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    <UserPlus size={20} />
-                  </div>
-                  Invitar al Equipo
-                </DialogTitle>
-                <p className="text-sm text-muted-foreground font-medium mt-2">Sincroniza el apoyo de {currentPatient?.name || "el paciente"} con especialistas.</p>
-              </DialogHeader>
-            </div>
-
-            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: "Padre", label: "Familia", icon: "🏠" },
-                  { id: "Terapeuta", label: "Terapeuta", icon: "🧩" },
-                  { id: "Médico", label: "Médico", icon: "🩺" },
-                  { id: "Profesor", label: "Escuela", icon: "🏫" },
-                ].map(r => (
-                  <button key={r.id} onClick={() => setInvRole(r.id)} className={`flex flex-col items-center p-4 rounded-2xl border-2 transition-all ${invRole === r.id ? "border-primary bg-primary/5 ring-4 ring-primary/5" : "border-slate-100 hover:border-slate-200 bg-white"}`}>
-                    <span className="text-2xl mb-2">{r.icon}</span>
-                    <span className="font-black text-[10px] uppercase tracking-widest">{r.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Correo Electrónico</Label>
-                  <Input placeholder="correo@ejemplo.com" value={invEmail} onChange={e => setInvEmail(e.target.value)} className="h-12 rounded-2xl border-2 focus-visible:ring-primary/20" />
+            {inviteSuccessData ? (
+              <div className="p-8 text-center space-y-6">
+                <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check size={40} strokeWidth={3} />
                 </div>
-                {invRole && invRole !== "Padre" && (
-                  <div className="animate-in fade-in slide-in-from-top-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Especialidad</Label>
-                    <Input placeholder="Ej: Neurólogo, Psicólogo..." value={invSpecialty} onChange={e => setInvSpecialty(e.target.value)} className="h-12 rounded-2xl border-2 focus-visible:ring-primary/20" />
-                  </div>
-                )}
-              </div>
-
-              <div className="p-5 bg-slate-50 rounded-[24px] border border-slate-100 space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Permisos Rápidos</p>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-black uppercase tracking-tight">Registrar Notas</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">Permite añadir observaciones.</p>
-                  </div>
-                  <Switch checked={invCanCreateObs} onCheckedChange={setInvCanCreateObs} />
+                <div>
+                  <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-2">¡Invitación Creada!</h2>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    El usuario <span className="font-bold text-foreground">{inviteSuccessData.email}</span> ha sido registrado en el equipo.
+                  </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-black uppercase tracking-tight">Editar Objetivos</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">Permite proponer metas PAI.</p>
+                
+                <div className="bg-muted/30 p-4 rounded-2xl border-2 border-dashed border-primary/20 space-y-4 text-left">
+                  <p className="text-xs font-black uppercase tracking-widest text-primary text-center">Enlace de Invitación</p>
+                  <p className="text-[10px] text-muted-foreground text-center">Comparte este enlace para que se una a tu equipo inmediatamente:</p>
+                  <div className="flex gap-2">
+                    <Input readOnly value={inviteSuccessData.link} className="h-12 bg-white text-xs font-medium" />
+                    <Button 
+                      variant="outline" 
+                      className="h-12 px-3 shrink-0" 
+                      onClick={() => {
+                        navigator.clipboard.writeText(inviteSuccessData.link);
+                        toast.success("Enlace copiado al portapapeles");
+                      }}
+                    >
+                      <Copy size={16} />
+                    </Button>
                   </div>
-                  <Switch checked={invCanEditGoals} onCheckedChange={setInvCanEditGoals} />
+                  
+                  <Button 
+                    className="w-full h-12 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-black text-xs uppercase tracking-widest gap-2 shadow-lg"
+                    onClick={() => {
+                      const msg = `¡Hola! Te he invitado a unirte al equipo de ${currentPatient?.name || "mi paciente"} en mIAngel. Por favor, haz clic aquí para aceptar: ${inviteSuccessData.link}`;
+                      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                    }}
+                  >
+                    <MessageCircle size={18} /> Enviar por WhatsApp
+                  </Button>
                 </div>
+                
+                <Button variant="ghost" className="w-full h-12 rounded-xl font-black text-xs uppercase tracking-widest" onClick={() => { setShowInvite(false); setInviteSuccessData(null); }}>
+                  Cerrar
+                </Button>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="bg-primary/5 p-6 border-b border-primary/10">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-black text-primary uppercase tracking-tighter flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-xl">
+                        <UserPlus size={20} />
+                      </div>
+                      Invitar al Equipo
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground font-medium mt-2">Sincroniza el apoyo de {currentPatient?.name || "el paciente"} con especialistas.</p>
+                  </DialogHeader>
+                </div>
 
-            <DialogFooter className="p-6 bg-slate-50 flex-col sm:flex-row gap-3">
-              <Button variant="ghost" className="w-full sm:flex-1 h-12 rounded-xl font-black text-xs uppercase tracking-widest" onClick={() => setShowInvite(false)}>
-                Cerrar
-              </Button>
-              <Button className="w-full sm:flex-1 h-12 rounded-xl bg-primary font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20" disabled={!invEmail || !invRole} onClick={handleInvite}>
-                {loading ? <Loader2 className="animate-spin" /> : "Enviar Invitación"}
-              </Button>
-            </DialogFooter>
+                <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: "Padre", label: "Familia", icon: "🏠" },
+                      { id: "Terapeuta", label: "Terapeuta", icon: "🧩" },
+                      { id: "Médico", label: "Médico", icon: "🩺" },
+                      { id: "Profesor", label: "Escuela", icon: "🏫" },
+                    ].map(r => (
+                      <button key={r.id} onClick={() => setInvRole(r.id)} className={`flex flex-col items-center p-4 rounded-2xl border-2 transition-all ${invRole === r.id ? "border-primary bg-primary/5 ring-4 ring-primary/5" : "border-slate-100 hover:border-slate-200 bg-white"}`}>
+                        <span className="text-2xl mb-2">{r.icon}</span>
+                        <span className="font-black text-[10px] uppercase tracking-widest">{r.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Correo Electrónico</Label>
+                      <Input placeholder="correo@ejemplo.com" value={invEmail} onChange={e => setInvEmail(e.target.value)} className="h-12 rounded-2xl border-2 focus-visible:ring-primary/20" />
+                    </div>
+                    {invRole && invRole !== "Padre" && (
+                      <div className="animate-in fade-in slide-in-from-top-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Especialidad</Label>
+                        <Input placeholder="Ej: Neurólogo, Psicólogo..." value={invSpecialty} onChange={e => setInvSpecialty(e.target.value)} className="h-12 rounded-2xl border-2 focus-visible:ring-primary/20" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-5 bg-slate-50 rounded-[24px] border border-slate-100 space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Permisos Rápidos</p>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-black uppercase tracking-tight">Registrar Notas</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Permite añadir observaciones.</p>
+                      </div>
+                      <Switch checked={invCanCreateObs} onCheckedChange={setInvCanCreateObs} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-black uppercase tracking-tight">Editar Objetivos</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Permite proponer metas PAI.</p>
+                      </div>
+                      <Switch checked={invCanEditGoals} onCheckedChange={setInvCanEditGoals} />
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="p-6 bg-slate-50 flex-col sm:flex-row gap-3">
+                  <Button variant="ghost" className="w-full sm:flex-1 h-12 rounded-xl font-black text-xs uppercase tracking-widest" onClick={() => setShowInvite(false)}>
+                    Cerrar
+                  </Button>
+                  <Button className="w-full sm:flex-1 h-12 rounded-xl bg-primary font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20" disabled={!invEmail || !invRole} onClick={handleInvite}>
+                    {loading ? <Loader2 className="animate-spin" /> : "Crear Invitación"}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
           </DialogContent>
         </Dialog>
 
