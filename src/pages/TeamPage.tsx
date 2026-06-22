@@ -43,6 +43,7 @@ export default function TeamPage() {
     pending: "text-warning bg-warning/10 border-warning/20",
     activo: "text-success bg-success/10 border-success/20",
     pendiente: "text-warning bg-warning/10 border-warning/20",
+    aceptado: "text-success bg-success/10 border-success/20",
   };
 
   useEffect(() => {
@@ -98,7 +99,8 @@ export default function TeamPage() {
 
           let name = m.invite_email || "Usuario Invitado";
           let email = m.invite_email;
-          let status = m.invite_status || "activo";
+          let inviteStatus = m.invite_status || "activo";
+          let status = inviteStatus === "aceptado" || inviteStatus === "activo" || inviteStatus === "active" ? "activo" : "pendiente";
 
           if (isMe) {
             name = `${userName} (Tú)`;
