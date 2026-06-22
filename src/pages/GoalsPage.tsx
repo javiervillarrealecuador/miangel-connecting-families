@@ -83,50 +83,56 @@ export default function GoalsPage() {
 
   const loadGoals = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !currentPatientId || !currentFamilyId) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !currentPatientId || !currentFamilyId) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: teamData } = await supabase
+        .from("equipo_pai")
+        .select("rol")
+        .eq("user_id", user.id)
+        .eq("persona_autismo_id", currentPatientId)
+        .maybeSingle();
+
+      if (teamData) {
+        setUserRole(teamData.rol || "");
+      }
+
+      const { data: goalsData } = await supabase
+        .from("pai_goals")
+        .select(`
+          *,
+          observations:goal_observations(count)
+        `)
+        .eq("persona_autismo_id", currentPatientId)
+        .order("created_at", { ascending: false });
+
+      setGoals(goalsData || []);
+
+      // Cargar nombres del equipo para accountability
+      const { data: teamMembers } = await supabase
+        .from("equipo_pai")
+        .select("user_id, rol, invite_email")
+        .eq("familia_id", currentFamilyId);
+      
+      if (teamMembers) {
+        const nameMap: Record<string, string> = {};
+        teamMembers.forEach(m => {
+          if (m.user_id) {
+            nameMap[m.user_id] = m.invite_email?.split('@')[0] || m.rol || "Miembro del Equipo";
+          }
+        });
+        setTeamNames(nameMap);
+      }
+    } catch (error) {
+      console.error("Error loading goals:", error);
+      toast.error("Error al cargar los objetivos");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { data: teamData } = await supabase
-      .from("equipo_pai")
-      .select("rol")
-      .eq("user_id", user.id)
-      .eq("persona_autismo_id", currentPatientId)
-      .maybeSingle();
-
-    if (teamData) {
-      setUserRole(teamData.rol || "");
-    }
-
-    const { data: goalsData } = await supabase
-      .from("pai_goals")
-      .select(`
-        *,
-        observations:goal_observations(count)
-      `)
-      .eq("persona_autismo_id", currentPatientId)
-      .order("created_at", { ascending: false });
-
-    setGoals(goalsData || []);
-
-    // Cargar nombres del equipo para accountability
-    const { data: teamMembers } = await supabase
-      .from("equipo_pai")
-      .select("user_id, rol, invite_email")
-      .eq("familia_id", currentFamilyId);
-    
-    if (teamMembers) {
-      const nameMap: Record<string, string> = {};
-      teamMembers.forEach(m => {
-        if (m.user_id) {
-          nameMap[m.user_id] = m.invite_email?.split('@')[0] || m.rol || "Miembro del Equipo";
-        }
-      });
-      setTeamNames(nameMap);
-    }
-    setLoading(false);
   };
 
   const handleCreateGoal = async () => {
@@ -143,12 +149,15 @@ export default function GoalsPage() {
       const { error } = await supabase
         .from("pai_goals")
         .insert({
+          familia_id: currentFamilyId,
           persona_autismo_id: currentPatientId,
           title: newGoal.title,
           description: newGoal.description,
           status: isParent ? "in_progress" : "pending_approval",
           progress: 0,
-          propuesto_por: user?.id
+          propuesto_por: user?.id,
+          rol_propuso: userRole,
+          created_by: user?.id
         });
 
       if (error) throw error;
@@ -156,7 +165,7 @@ export default function GoalsPage() {
       toast.success(isParent ? "Objetivo creado correctamente" : "Objetivo propuesto al equipo familiar");
       setShowCreateGoal(false);
       setNewGoal({ title: "", description: "" });
-      loadGoals();
+      await loadGoals();
     } catch (error: any) {
       toast.error("Error al crear el objetivo");
       console.error(error);
