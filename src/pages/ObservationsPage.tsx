@@ -83,13 +83,14 @@ export default function ObservationsPage() {
       return;
     }
 
-    const pIds = currentPatientId ? [currentPatientId] : [];
-    if (pIds.length === 0) {
-      setLoading(false);
-      setLoadingMore(false);
-      return;
-    }
-      
+    try {
+      const pIds = currentPatientId ? [currentPatientId] : [];
+      if (pIds.length === 0) {
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+        
       const PAGE_SIZE = 20;
       const from = pageIndex * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
@@ -164,9 +165,13 @@ export default function ObservationsPage() {
           setTeamMembersMap(map);
         }
       }
-    
-    setLoading(false);
-    setLoadingMore(false);
+    } catch (error) {
+      console.error("Error loading observations:", error);
+      toast.error("Error al cargar observaciones");
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   };
 
   const filtered = realObservations;

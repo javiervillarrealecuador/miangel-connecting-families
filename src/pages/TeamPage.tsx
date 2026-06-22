@@ -54,83 +54,89 @@ export default function TeamPage() {
 
   const loadTeam = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user || !currentPatientId || !currentFamilyId) {
-      setLoading(false);
-      return;
-    }
-
-    const { data: myTeamData } = await supabase
-      .from("equipo_pai")
-      .select("id, rol")
-      .eq("user_id", user.id)
-      .eq("persona_autismo_id", currentPatientId)
-      .limit(1);
-
-    const myTeam = myTeamData?.[0];
-
-    if (myTeam) {
-      setMyTeamId(myTeam.id);
-      const role = myTeam.rol;
-
-      // Validar si es propietario real consultando la tabla familias
-      const { data: familyInfo } = await supabase
-        .from("familias")
-        .select("propietario_id")
-        .eq("id", currentFamilyId)
-        .maybeSingle();
-        
-      const isOwner = familyInfo?.propietario_id === user.id;
-
-      const normalizedRole = role?.toLowerCase() || "";
-      setIsAdmin(isOwner || normalizedRole.includes("padre") || normalizedRole.includes("madre") || normalizedRole.includes("propietario") || normalizedRole.includes("administrador"));
-
-      const { data: teamData } = await supabase
-        .from("equipo_pai")
-        .select("id, user_id, familia_id, persona_autismo_id, rol, specialty, invite_email, invite_status, puede_ver_observaciones, puede_crear_observaciones, puede_ver_objetivos, puede_editar_objetivos")
-        .eq("persona_autismo_id", currentPatientId)
-        .order("created_at", { ascending: true });
-
-      if (teamData) {
-        const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || "Tú";
-        setTeam(teamData.map(m => {
-          const isMe = m.id === myTeam.id;
-          const isThisMemberTheOwner = familyInfo?.propietario_id && m.user_id === familyInfo.propietario_id;
-
-          let name = m.invite_email || "Usuario Invitado";
-          let email = m.invite_email;
-          let inviteStatus = m.invite_status || "activo";
-          let status = inviteStatus === "aceptado" || inviteStatus === "activo" || inviteStatus === "active" ? "activo" : "pendiente";
-
-          if (isMe) {
-            name = `${userName} (Tú)`;
-            email = user.email;
-            status = "activo";
-          } else if (isThisMemberTheOwner) {
-            name = "Propietario de la Familia";
-            status = "activo"; // El propietario siempre está activo
-          }
-
-          return {
-            id: m.id,
-            name: name,
-            role: m.rol,
-            email: email,
-            phone: "", 
-            status: status,
-            specialty: m.specialty,
-            isOwner: isThisMemberTheOwner,
-            permissions: { 
-              viewObs: m.puede_ver_observaciones, 
-              createObs: m.puede_crear_observaciones, 
-              viewGoals: m.puede_ver_objetivos, 
-              editGoals: m.puede_editar_objetivos 
-            },
-          };
-        }));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !currentPatientId || !currentFamilyId) {
+        setLoading(false);
+        return;
       }
+
+      const { data: myTeamData } = await supabase
+        .from("equipo_pai")
+        .select("id, rol")
+        .eq("user_id", user.id)
+        .eq("persona_autismo_id", currentPatientId)
+        .limit(1);
+
+      const myTeam = myTeamData?.[0];
+
+      if (myTeam) {
+        setMyTeamId(myTeam.id);
+        const role = myTeam.rol;
+
+        // Validar si es propietario real consultando la tabla familias
+        const { data: familyInfo } = await supabase
+          .from("familias")
+          .select("propietario_id")
+          .eq("id", currentFamilyId)
+          .maybeSingle();
+          
+        const isOwner = familyInfo?.propietario_id === user.id;
+
+        const normalizedRole = role?.toLowerCase() || "";
+        setIsAdmin(isOwner || normalizedRole.includes("padre") || normalizedRole.includes("madre") || normalizedRole.includes("propietario") || normalizedRole.includes("administrador"));
+
+        const { data: teamData } = await supabase
+          .from("equipo_pai")
+          .select("id, user_id, familia_id, persona_autismo_id, rol, specialty, invite_email, invite_status, puede_ver_observaciones, puede_crear_observaciones, puede_ver_objetivos, puede_editar_objetivos")
+          .eq("persona_autismo_id", currentPatientId)
+          .order("created_at", { ascending: true });
+
+        if (teamData) {
+          const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || "Tú";
+          setTeam(teamData.map(m => {
+            const isMe = m.id === myTeam.id;
+            const isThisMemberTheOwner = familyInfo?.propietario_id && m.user_id === familyInfo.propietario_id;
+
+            let name = m.invite_email || "Usuario Invitado";
+            let email = m.invite_email;
+            let inviteStatus = m.invite_status || "activo";
+            let status = inviteStatus === "aceptado" || inviteStatus === "activo" || inviteStatus === "active" ? "activo" : "pendiente";
+
+            if (isMe) {
+              name = `${userName} (Tú)`;
+              email = user.email;
+              status = "activo";
+            } else if (isThisMemberTheOwner) {
+              name = "Propietario de la Familia";
+              status = "activo"; // El propietario siempre está activo
+            }
+
+            return {
+              id: m.id,
+              name: name,
+              role: m.rol,
+              email: email,
+              phone: "", 
+              status: status,
+              specialty: m.specialty,
+              isOwner: isThisMemberTheOwner,
+              permissions: { 
+                viewObs: m.puede_ver_observaciones, 
+                createObs: m.puede_crear_observaciones, 
+                viewGoals: m.puede_ver_objetivos, 
+                editGoals: m.puede_editar_objetivos 
+              },
+            };
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error loading team members:", error);
+      toast.error("Error al cargar miembros del equipo");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleInvite = async () => {
