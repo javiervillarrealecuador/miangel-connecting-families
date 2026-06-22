@@ -60,6 +60,13 @@ export default function GoalCard({
   onEdit,
   onDelete
 }: GoalCardProps) {
+  const safeDate = (dateVal: any, options?: Intl.DateTimeFormatOptions) => {
+    if (!dateVal) return "Pendiente";
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "Pendiente";
+    return options ? d.toLocaleDateString("es-EC", options) : d.toLocaleDateString();
+  };
+
   return (
     <div className={`bg-white border-2 rounded-[48px] p-6 md:p-12 shadow-sm transition-all overflow-hidden ${goal.status === 'completed' ? 'border-success/20 bg-success/5' : 'border-slate-100 hover:border-primary/20 hover:shadow-xl hover:shadow-slate-200/50'}`}>
       <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-10">
@@ -75,7 +82,7 @@ export default function GoalCard({
                '⚡ En Proceso'}
             </span>
             <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
-              <Calendar size={14} className="text-slate-300" /> {new Date(goal.created_at).toLocaleDateString()}
+              <Calendar size={14} className="text-slate-300" /> {safeDate(goal.created_at)}
             </span>
           </div>
           <div className="flex items-start justify-between gap-4">
@@ -182,7 +189,7 @@ export default function GoalCard({
             <div className="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/10">
               <History size={18} />
             </div>
-            Último avance: {new Date(goal.updated_at || goal.created_at).toLocaleDateString()}
+            Último avance: {safeDate(goal.updated_at || goal.created_at)}
           </div>
         </div>
       </div>
@@ -235,7 +242,7 @@ export default function GoalCard({
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                              {obs.created_at ? new Date(obs.created_at).toLocaleDateString("es-EC", { day: 'numeric', month: 'short', year: 'numeric' }) : 'Fecha pendiente'}
+                              {safeDate(obs.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
                             </span>
                             <span className="inline-block text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-widest">
                               {displayAuthor}
