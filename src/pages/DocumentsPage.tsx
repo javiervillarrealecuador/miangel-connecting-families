@@ -216,7 +216,11 @@ export default function DocumentsPage() {
                           {doc.name.split('_').slice(1).join('_') || doc.name}
                         </p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                          {new Date(doc.created_at).toLocaleDateString()} • {formatSize(doc.size)}
+                          {(() => {
+                            if (!doc.created_at) return "Pendiente";
+                            const d = new Date(doc.created_at);
+                            return isNaN(d.getTime()) ? "Pendiente" : d.toLocaleDateString();
+                          })()} • {formatSize(doc.size)}
                         </p>
                       </div>
                     </div>

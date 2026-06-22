@@ -126,9 +126,10 @@ export default function ReportsPage() {
       }
 
       // 2. Formatear observaciones para Gemini
-      const formattedObs = obsList.map((o: any) => 
-        `- [${new Date(o.fecha_observacion).toLocaleDateString()}] Tipo: ${o.tipo}, Contexto: ${o.contexto || 'General'}, Intensidad: ${o.intensidad_escala || o.intensidad || 3}/5, Descripción: ${o.descripcion_texto}`
-      ).join("\n");
+      const formattedObs = obsList.map((o: any) => {
+        const dateStr = o.fecha_observacion ? new Date(o.fecha_observacion).toLocaleDateString() : "Pendiente";
+        return `- [${dateStr}] Tipo: ${o.tipo}, Contexto: ${o.contexto || 'General'}, Intensidad: ${o.intensidad_escala || o.intensidad || 3}/5, Descripción: ${o.descripcion_texto}`;
+      }).join("\n");
 
       // 3. Llamar a la Edge Function segura
       const { data: parsedData, error: fnError } = await supabase.functions.invoke("generate-report", {
@@ -280,7 +281,7 @@ export default function ReportsPage() {
                         {obs.tipo}
                       </span>
                       <span className="text-[9px] font-bold text-slate-400 italic">
-                        {new Date(obs.fecha_observacion).toLocaleDateString()}
+                        {obs.fecha_observacion ? new Date(obs.fecha_observacion).toLocaleDateString() : 'Pendiente'}
                       </span>
                     </div>
                     <p className="text-xs font-medium text-slate-700 leading-snug">{obs.descripcion_texto}</p>
@@ -306,7 +307,7 @@ export default function ReportsPage() {
                         Resumen Consolidado
                       </span>
                       <span className="text-[10px] font-bold text-slate-500">
-                        {new Date(sum.created_at).toLocaleDateString()}
+                        {sum.created_at ? new Date(sum.created_at).toLocaleDateString() : 'Pendiente'}
                       </span>
                     </div>
                     <div className="prose prose-sm max-w-none text-slate-800 whitespace-pre-wrap leading-relaxed font-medium">
@@ -360,7 +361,7 @@ export default function ReportsPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div className="flex items-center gap-3">
                       <Badge className="bg-primary text-white text-[9px] font-black uppercase tracking-widest px-3 py-1">Consolidado mIAngel</Badge>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(sum.created_at).toLocaleDateString()}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{sum.created_at ? new Date(sum.created_at).toLocaleDateString() : 'Pendiente'}</span>
                     </div>
                     <Button 
                       variant="outline" 

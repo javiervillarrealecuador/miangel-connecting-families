@@ -53,17 +53,21 @@ export default function DashboardPage() {
         return;
       }
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setCurrentUserId(user.id);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        setCurrentUserId(user.id);
 
-      const pid = currentPatientId;
+        const pid = currentPatientId;
 
-      const [obs, goals, alts] = await Promise.all([
-        supabase.from("observaciones").select("id, fecha_observacion, intensidad_escala").eq("persona_autismo_id", pid).order("fecha_observacion", { ascending: true }).limit(30),
-        supabase.from("pai_goals").select("id", { count: "exact" }).eq("persona_autismo_id", pid).in("status", ["activo", "in_progress"]),
-        supabase.from("alertas").select("id, severidad, tipo, created_at, descripcion, registrado_por, creada_por, leida_por").eq("persona_autismo_id", pid).order("created_at", { ascending: false }).limit(10)
-      ]);
+        const [obs, goals, alts] = await Promise.all([
+          supabase.from("observaciones").select("id, fecha_observacion, intensidad_escala").eq("persona_autismo_id", pid).order("fecha_observacion", { ascending: true }).limit(30),
+          supabase.from("pai_goals").select("id", { count: "exact" }).eq("persona_autismo_id", pid).in("status", ["activo", "in_progress"]),
+          supabase.from("alertas").select("id, severidad, tipo, created_at, descripcion, registrado_por, creada_por, leida_por").eq("persona_autismo_id", pid).order("created_at", { ascending: false }).limit(10)
+        ]);
 
         // Filtrar alertas no leídas por el usuario actual
         const unread = alts.data?.filter(a => !a.leida_por?.includes(user.id)) || [];
@@ -85,7 +89,9 @@ export default function DashboardPage() {
           for (let i = 0; i < 24; i++) hourlyBuckets[i] = { total: 0, count: 0 };
 
           obs.data.forEach(o => {
+            if (!o.fecha_observacion) return;
             const dateObj = new Date(o.fecha_observacion);
+            if (isNaN(dateObj.getTime())) return;
             
             // Lógica Radar
             const dateKey = dateObj.toLocaleDateString("es-EC", { day: 'numeric', month: 'short' });
@@ -114,8 +120,11 @@ export default function DashboardPage() {
           setIntensityData(radarChartData);
           setHeatmapData(heatmapChartData);
         }
-      
-      setLoading(false);
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadDashboard();
@@ -520,7 +529,11 @@ export default function DashboardPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-1">
                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">
-                          {a.tipo?.replace("_", " ")} · {new Date(a.created_at).toLocaleDateString()}
+                          {a.tipo?.replace("_", " ")} · {(() => {
+                            if (!a.created_at) return "Pendiente";
+                            const d = new Date(a.created_at);
+                            return isNaN(d.getTime()) ? "Pendiente" : d.toLocaleDateString();
+                          })()}
                         </p>
                         {a.severidad === 'critica' && !a.leida_por?.includes(currentUserId) && (
                           <span className="bg-critical text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase">Urgente</span>

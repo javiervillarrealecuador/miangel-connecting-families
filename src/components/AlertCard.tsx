@@ -45,7 +45,12 @@ export default function AlertCard({ alert, read, onMarkRead }: AlertCardProps) {
           </span>
         </div>
         <span className="text-[10px] font-bold text-muted-foreground uppercase">
-          {new Date(alert.created_at).toLocaleDateString("es-EC", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          {(() => {
+            if (!alert.created_at) return "PENDIENTE";
+            const d = new Date(alert.created_at);
+            if (isNaN(d.getTime())) return "PENDIENTE";
+            return d.toLocaleDateString("es-EC", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+          })()}
         </span>
       </div>
       <h3 className="font-bold text-foreground text-sm mb-1">{typeLabels[alert.tipo] || "Notificación PAI"}</h3>
