@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar Gastronómico — Sierra Norte Ecuador | 19 Jun 2026</title>
+  <style>
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #161b24;
+      --surface2: #1e2533;
+      --border:   #2a3347;
+      --accent:   #3b82f6;
+      --accent2:  #f59e0b;
+      --green:    #10b981;
+      --red:      #ef4444;
+      --text:     #e2e8f0;
+      --muted:    #7a8aaa;
+      --pill-bg:  #1e3a5f;
+      --pill-txt: #93c5fd;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0 0 60px;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #0f1623 0%, #192035 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 36px 40px 28px;
+    }
+    .header-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .badge {
+      font-size: 11px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; padding: 3px 10px;
+      border-radius: 4px; background: var(--accent); color: #fff;
+    }
+    .badge.amber { background: var(--accent2); color: #0d0f14; }
+    header h1 { font-size: 26px; font-weight: 700; color: #fff; }
+    header p.subtitle { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .header-stats { display: flex; gap: 28px; margin-top: 22px; flex-wrap: wrap; }
+    .stat .num { font-size: 28px; font-weight: 800; color: var(--accent); }
+    .stat .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+    /* LAYOUT */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 0 10px;
+      margin-bottom: 20px;
+    }
+
+    /* CARDS */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .card h2 { font-size: 17px; font-weight: 700; color: #fff; }
+    .status-badge {
+      font-size: 11px; font-weight: 700; white-space: nowrap;
+      padding: 3px 9px; border-radius: 20px;
+      background: rgba(16,185,129,.15); color: var(--green);
+      border: 1px solid rgba(16,185,129,.3);
+    }
+    .status-badge.amber { background: rgba(245,158,11,.12); color: #fbbf24; border-color: rgba(245,158,11,.3); }
+    .status-badge.gray  { background: rgba(120,130,160,.12); color: var(--muted); border-color: rgba(120,130,160,.25); }
+    .status-badge.red   { background: rgba(239,68,68,.12); color: #fca5a5; border-color: rgba(239,68,68,.3); }
+    .meta-row { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+    .card-body { font-size: 14px; color: #cbd5e1; }
+    .card-body strong { color: var(--text); }
+    .card-body p + p { margin-top: 10px; }
+    .label-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .pill {
+      font-size: 12px; font-weight: 600; padding: 4px 10px;
+      border-radius: 20px; background: var(--pill-bg); color: var(--pill-txt);
+    }
+    .pill.green { background: rgba(16,185,129,.12); color: #34d399; }
+    .pill.amber { background: rgba(245,158,11,.12); color: #fcd34d; }
+    .pill.red   { background: rgba(239,68,68,.12);  color: #fca5a5; }
+    .pill.gray  { background: rgba(100,110,130,.12); color: #94a3b8; }
+    .card-footer {
+      font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border); padding-top: 12px;
+    }
+    .card-footer a { color: var(--accent); text-decoration: none; }
+    .card-footer a:hover { text-decoration: underline; }
+
+    /* ALERT */
+    .alert {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent2);
+      border-radius: 8px;
+      padding: 18px 22px;
+      font-size: 14px; color: #cbd5e1;
+      margin-bottom: 24px;
+    }
+    .alert strong { color: #fcd34d; }
+
+    /* TRENDS */
+    .trends-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .trend-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .trend-card .icon { font-size: 22px; margin-bottom: 8px; }
+    .trend-card h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .trend-card p { font-size: 13px; color: var(--muted); }
+
+    /* FOOTER */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 20px 40px;
+      font-size: 12px; color: var(--muted);
+      margin-top: 48px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-meta">
+    <span class="badge">Inteligencia de Mercado</span>
+    <span class="badge amber">Sierra Norte · Ecuador</span>
+  </div>
+  <h1>Radar Gastronómico — Aperturas de Restaurantes</h1>
+  <p class="subtitle">Período de análisis: Enero–Junio 2026 &nbsp;·&nbsp; Generado: 19 de junio de 2026</p>
+  <div class="header-stats">
+    <div class="stat"><div class="num">3</div><div class="lbl">Aperturas confirmadas</div></div>
+    <div class="stat"><div class="num">1</div><div class="lbl">Por confirmar</div></div>
+    <div class="stat"><div class="num">1</div><div class="lbl">Cierre relevante</div></div>
+    <div class="stat"><div class="num">Quito</div><div class="lbl">Ciudad con mayor actividad</div></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="section-title">Nota metodológica</div>
+  <div class="alert">
+    <strong>Alcance geográfico:</strong> Las búsquedas incluyeron Quito, Cumbayá, Ibarra y Tulcán. <strong>Resultado en Ibarra y Tulcán:</strong> No se encontraron aperturas de restaurantes nuevos verificadas mediante fuentes de prensa o medios digitales para el período enero–junio 2026. Los resultados disponibles en TripAdvisor y Sluurpy corresponden a establecimientos ya operativos, sin registros de inauguraciones recientes. <strong>Solo se incluyen establecimientos con respaldo en fuentes verificables</strong> (medios de prensa, sitios oficiales, organismos públicos).
+  </div>
+
+  <!-- APERTURAS CONFIRMADAS -->
+  <div class="section-title">Aperturas confirmadas — Quito (2026)</div>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-top">
+        <h2>Datu Deli Steakhouse</h2>
+        <span class="status-badge">✓ Confirmado</span>
+      </div>
+      <div class="meta-row">
+        <span>📍 Manuel Barreto y Av. La Coruña, Quito</span>
+        <span>📅 Marzo 2026</span>
+        <span>🍖 Steakhouse premium</span>
+      </div>
+      <div class="card-body">
+        <p><strong>Concepto:</strong> Steakhouse estilo americano clásico con cocción al carbón y leña. Pertenece al grupo familiar Datu Gourmet, con más de 25 años en importación y distribución gourmet. Primer local tipo restaurante de la marca (el anterior formato era mercado gourmet, abierto en dic. 2020).</p>
+        <p><strong>Factor diferenciador:</strong> Única licencia oficial de <em>Certified Angus Beef</em> (CAB) en Ecuador. El sello CAB exige cumplir 10 estándares de calidad sobre marmoleo, madurez y uniformidad del corte —solo el ganado Angus de élite lo obtiene— eliminando la variabilidad típica de la carne convencional.</p>
+        <p><strong>Ventaja competitiva:</strong> Integración vertical: importador + distribuidor + restaurante. Control de la cadena de suministro desde el origen. Licencia CAB como barrera de entrada: ningún competidor en Ecuador puede replicarla sin la misma certificación.</p>
+        <p><strong>Inversión declarada:</strong> USD 500 000+ (infraestructura, diseño, equipamiento, capacitación). Proyección ventas año 1: ~USD 1 000 000. 30 empleos directos / 100+ indirectos.</p>
+        <p><strong>Segmento objetivo:</strong> Consumidor A-B, ejecutivos, turismo premium. Ticket alto (precio no publicado oficialmente).</p>
+      </div>
+      <div class="label-row">
+        <span class="pill green">Licencia CAB exclusiva en Ecuador</span>
+        <span class="pill">Carbón y leña</span>
+        <span class="pill amber">Inversión >$500K</span>
+        <span class="pill">Integración vertical</span>
+        <span class="pill">Segmento A-B</span>
+      </div>
+      <div class="card-footer">
+        Fuentes: <a href="https://dolcevita.ec/datu-deli-steakhouse-la-nueva-meca-de-las-carnes-premium-en-quito/" target="_blank">DolceVita.ec (15 abr 2026)</a> · <a href="https://www.metroecuador.com.ec/empresarial/2026/04/20/datu-deli-apuesta-por-el-segmento-premium-y-abre-su-steakhouse-especializado-en-quito/" target="_blank">Metro Ecuador (20 abr 2026)</a> · <a href="https://www.expreso.ec/buenavida/datu-deli-steakhouse-apuesta-cortes-premium-escena-gastronomica-quito-279014.html" target="_blank">Expreso.ec</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <h2>Jumandy Organic Garden — La Mariscal</h2>
+        <span class="status-badge">✓ Confirmado</span>
+      </div>
+      <div class="meta-row">
+        <span>📍 La Mariscal, Quito</span>
+        <span>📅 Mayo 2026</span>
+        <span>🌿 Vegetariano / vegano</span>
+      </div>
+      <div class="card-body">
+        <p><strong>Concepto:</strong> Propuesta plant-based con énfasis en ingredientes locales, ambiente pet-friendly y cocina de consciencia. Corresponde a la expansión de una marca ya operativa en el Centro Histórico de Quito (San Blas y La Ronda) hacia el sector La Mariscal.</p>
+        <p><strong>Factor diferenciador:</strong> Posicionamiento en turismo consciente. El fundador Edwin Garcés reporta alta afluencia de visitantes extranjeros atraídos por el concepto plant-based, los ingredientes locales y el ambiente. Ticket accesible (desde ~$3.50) en una zona que históricamente albergó opciones de ticket medio-alto.</p>
+        <p><strong>Ventaja competitiva:</strong> Marca consolidada con múltiples puntos en Quito (eficiencia de marca conocida). Alineada con la tendencia de reactivación de La Mariscal impulsada por el Municipio de Quito.</p>
+        <p><strong>Segmento objetivo:</strong> Turismo internacional, consumidor urbano joven, mercado vegano/saludable. Ticket bajo-medio.</p>
+      </div>
+      <div class="label-row">
+        <span class="pill green">Plant-based</span>
+        <span class="pill green">Ingredientes locales</span>
+        <span class="pill">Pet-friendly</span>
+        <span class="pill amber">Expansión de marca establecida</span>
+        <span class="pill">Ticket accesible</span>
+      </div>
+      <div class="card-footer">
+        Fuente: <a href="https://www.quitoinforma.gob.ec/2026/05/18/cinco-emprendimientos-que-impulsan-una-nueva-etapa-en-la-mariscal/" target="_blank">QuitoInforma.gob.ec (18 may 2026)</a> · <a href="https://www.tripadvisor.com/Restaurant_Review-g294308-d33432351-Reviews-Jumandy_Organic_Garden_La_Ronda-Quito_Pichincha_Province.html" target="_blank">TripAdvisor</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <h2>Olive Garden — 2.º local Quito</h2>
+        <span class="status-badge amber">⏳ Apertura próxima</span>
+      </div>
+      <div class="meta-row">
+        <span>📍 Diego de Almagro y Colón, Quito</span>
+        <span>📅 Anunciado: mayo 2026</span>
+        <span>🍝 Italiana casual dining</span>
+      </div>
+      <div class="card-body">
+        <p><strong>Concepto:</strong> Segunda ubicación de Olive Garden en Quito (operado por Grupo El Rosado, franquicia de Darden Restaurants). El primer local en Quito se ubica en un centro comercial. Este nuevo punto sale del formato mall hacia zona de corredor urbano.</p>
+        <p><strong>Factor diferenciador:</strong> Reconocimiento internacional de marca en formato casual dining familiar. Precios medios con propuesta de cocina italiana accesible.</p>
+        <p><strong>Ventaja competitiva:</strong> Marca global con sistema operativo estandarizado y supply chain consolidado. La elección del corredor Diego de Almagro/Colón —de alta densidad peatonal y vehicular— sugiere estrategia de visibilidad y accesibilidad sobre exclusividad.</p>
+        <p><strong>Nota:</strong> Sin fecha oficial de inauguración al cierre de este reporte (19 jun 2026). Anuncio confirmado en redes sociales de la marca.</p>
+        <p><strong>Segmento objetivo:</strong> Familias, consumidor clase media-alta, turismo corporativo. Ticket medio.</p>
+      </div>
+      <div class="label-row">
+        <span class="pill">Franquicia internacional</span>
+        <span class="pill amber">Fecha por confirmar</span>
+        <span class="pill">Casual dining</span>
+        <span class="pill">Corredor urbano</span>
+        <span class="pill green">Grupo El Rosado</span>
+      </div>
+      <div class="card-footer">
+        Fuente: <a href="https://www.ondata.com.ec/olive-garden-quito/" target="_blank">OnData.ec (22 may 2026)</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- POR CONFIRMAR -->
+  <div class="section-title">Por confirmar</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-top">
+        <h2>Carl's Jr. — Nuevo local Quito</h2>
+        <span class="status-badge gray">? Por confirmar</span>
+      </div>
+      <div class="meta-row">
+        <span>📍 Diego de Almagro y Colón, Quito</span>
+        <span>📅 Sin fecha publicada</span>
+        <span>🍔 QSR hamburguesería</span>
+      </div>
+      <div class="card-body">
+        <p><strong>Concepto:</strong> Cadena QSR de hamburguesas a la parrilla con presencia en múltiples ciudades de Ecuador.</p>
+        <p><strong>Estado:</strong> Mencionado por OnData.ec (22 may 2026) como apertura concurrente con Olive Garden en el mismo corredor, basado en reportes de transeúntes. No se encontró comunicado oficial de Carl's Jr. Ecuador ni fecha de inauguración en ninguna fuente verificada.</p>
+        <p><strong>Relevancia analítica:</strong> Si se confirma, junto con Olive Garden transformaría el corredor Diego de Almagro / Colón en un nodo de concentración de marcas internacionales de food service, lo que aumentaría la presión competitiva sobre restaurantes independientes del sector.</p>
+      </div>
+      <div class="label-row">
+        <span class="pill gray">Fuente: referencia indirecta</span>
+        <span class="pill">QSR internacional</span>
+        <span class="pill amber">Sin confirmación oficial</span>
+      </div>
+      <div class="card-footer">
+        Mención en: <a href="https://www.ondata.com.ec/olive-garden-quito/" target="_blank">OnData.ec (22 may 2026)</a>. No existe fuente primaria de Carl's Jr. Ecuador para este local.
+      </div>
+    </div>
+  </div>
+
+  <!-- CIERRE RELEVANTE -->
+  <div class="section-title">Cierre relevante del período</div>
+  <div class="cards">
+    <div class="card">
+      <div class="card-top">
+        <h2>Kriollo por Íkaro</h2>
+        <span class="status-badge red">✗ Cerrado</span>
+      </div>
+      <div class="meta-row">
+        <span>📍 Quito</span>
+        <span>📅 Cerró: 4 de abril de 2026</span>
+        <span>🍴 Cocina ecuatoriana contemporánea</span>
+      </div>
+      <div class="card-body">
+        <p><strong>Contexto:</strong> Restaurante de la chef Carolina Sánchez (conocida por participación en MasterChef Ecuador). Cierre definitivo anunciado el 2 de abril de 2026, último servicio el 4 de abril. Las causas no fueron divulgadas públicamente.</p>
+        <p><strong>Relevancia para el análisis:</strong> Ilustra que la visibilidad mediática y el reconocimiento de marca personal no garantizan sostenibilidad operativa en el mercado gastronómico de Quito. El cierre ocurre en simultáneo con la apertura de propuestas con mayor capital y respaldo corporativo (Datu Deli Steakhouse).</p>
+        <p><strong>Nota:</strong> La misma chef anunció posteriormente la apertura de un nuevo local de tartas vascas en Cuenca (Mall del Alto), fuera del ámbito geográfico de este reporte.</p>
+      </div>
+      <div class="label-row">
+        <span class="pill red">Cierre definitivo</span>
+        <span class="pill gray">Causas no divulgadas</span>
+        <span class="pill">Chef con perfil público</span>
+      </div>
+      <div class="card-footer">
+        Fuente: <a href="https://www.primicias.ec/entretenimiento/gastronomia/cierra-restaurante-chef-carito-quito-kriollo-ikaro-carolina-sanchez-masterchef-ecuador-119560/" target="_blank">Primicias.ec (abr 2026)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIN DATOS IBARRA Y TULCÁN -->
+  <div class="section-title">Ibarra / Tulcán — Resultado de investigación</div>
+  <div class="alert">
+    <strong>Sin aperturas verificadas en el período enero–junio 2026.</strong> Las búsquedas en medios de prensa (El Comercio, Primicias, La Hora), plataformas de reseñas (TripAdvisor, Sluurpy) y redes sociales abiertas no retornaron registros de inauguraciones de restaurantes nuevos en Ibarra ni Tulcán para este período. Los resultados encontrados corresponden exclusivamente a establecimientos ya operativos. Se recomienda monitoreo directo de páginas de la Cámara de Comercio de Imbabura y Carchi, así como medios locales (Diario del Norte, La Hora Carchi), para detectar movimientos en períodos posteriores.
+  </div>
+
+  <!-- TENDENCIAS -->
+  <div class="section-title">Tendencias del período (Sierra Norte)</div>
+  <div class="trends-grid">
+
+    <div class="trend-card">
+      <div class="icon">📈</div>
+      <h3>Segmentación premium creciente en Quito</h3>
+      <p>Las aperturas más significativas apuestan por el segmento A-B con inversiones superiores a USD 500K. El diferenciador ya no es el concepto sino la certificación verificable de calidad de materia prima.</p>
+    </div>
+
+    <div class="trend-card">
+      <div class="icon">🌿</div>
+      <h3>Plant-based como segmento consolidado</h3>
+      <p>Jumandy Organic Garden evidencia que la cocina vegana/vegetariana ha superado la fase de nicho: se expande a zonas de alto tráfico turístico con modelos de bajo ticket y alta rotación.</p>
+    </div>
+
+    <div class="trend-card">
+      <div class="icon">🏙️</div>
+      <h3>Emergencia del corredor Diego de Almagro/Colón</h3>
+      <p>La concentración de Olive Garden y posiblemente Carl's Jr. señala desplazamiento del eje gastronómico desde los centros comerciales hacia zonas de corredor urbano con mayor visibilidad.</p>
+    </div>
+
+    <div class="trend-card">
+      <div class="icon">🌎</div>
+      <h3>Expansión de franquicias internacionales</h3>
+      <p>Ecuador sigue siendo plaza atractiva para marcas internacionales de food service. Olive Garden, dentro del Grupo El Rosado, continúa su expansión por ciudades principales pese al contexto económico.</p>
+    </div>
+
+    <div class="trend-card">
+      <div class="icon">⚠️</div>
+      <h3>Visibilidad mediática ≠ sostenibilidad</h3>
+      <p>El cierre de Kriollo por Íkaro confirma que el reconocimiento de marca personal no sustituye la solidez en gestión operativa y financiera. La estructura de costos sigue siendo el factor crítico.</p>
+    </div>
+
+    <div class="trend-card">
+      <div class="icon">🏘️</div>
+      <h3>Reactivación de La Mariscal como clúster gastronómico</h3>
+      <p>El Municipio de Quito reportó 3.110+ nuevos negocios entre 2025 y feb 2026. La Mariscal figura como zona prioritaria de reposicionamiento con apoyo institucional activo.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  Reporte generado: <strong>19 de junio de 2026</strong> &nbsp;·&nbsp; Preparado para: <strong>Javier Villarreal</strong> &nbsp;·&nbsp; Uso: análisis de mercado gastronómico Sierra Norte Ecuador<br>
+  Fuentes consultadas: DolceVita.ec · Metro Ecuador · OnData.ec · QuitoInforma.gob.ec · Primicias.ec · Expreso.ec · ElNuevoTiempo.com · TripAdvisor
+</footer>
+
+</body>
+</html>

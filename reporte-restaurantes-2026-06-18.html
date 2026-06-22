@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar Gastronómico — Sierra Norte Ecuador · 18 Jun 2026</title>
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161b26;
+      --surface2:  #1e2535;
+      --border:    #2c3550;
+      --accent:    #f5a623;
+      --accent2:   #3b82f6;
+      --accent3:   #10b981;
+      --warn:      #f59e0b;
+      --muted:     #8892a4;
+      --text:      #e2e8f0;
+      --text-dim:  #94a3b8;
+      --tag-bg:    #1e3a5f;
+      --tag-text:  #93c5fd;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 0 0 60px 0;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1a2540 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 36px 24px 28px;
+      text-align: center;
+    }
+    .header-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 3px;
+      margin-bottom: 14px;
+    }
+    .header h1 {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .header-sub {
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .header-meta {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .header-meta span {
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .header-meta strong { color: var(--accent); }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────────── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ─── SECTION TITLE ─────────────────────────────────────────── */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 40px 0 20px;
+    }
+    .section-title h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .section-title .line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .section-title .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* ─── CARDS GRID ─────────────────────────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--accent); }
+
+    .card-status {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 4px;
+    }
+    .status-confirmed { background: #064e3b; color: #34d399; }
+    .status-pending   { background: #451a03; color: #fbbf24; }
+    .status-notable   { background: #1e3a5f; color: #93c5fd; }
+
+    .card-city {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      padding-right: 90px;
+    }
+
+    .card-concept {
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .card-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+      margin-top: 14px;
+    }
+
+    .card-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+    }
+    .tag.green { background: #064e3b; color: #6ee7b7; }
+    .tag.orange { background: #431407; color: #fdba74; }
+    .tag.purple { background: #2e1065; color: #c4b5fd; }
+    .tag.gray   { background: #1e2535; color: #94a3b8; }
+
+    .card-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0 12px;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .price-range {
+      font-size: 13px;
+      color: var(--accent3);
+      font-weight: 600;
+    }
+
+    .source-link {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .source-link:hover { color: var(--accent2); text-decoration: underline; }
+
+    /* ─── NO DATA CARD ───────────────────────────────────────────── */
+    .no-data-card {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .no-data-card strong { color: var(--text-dim); }
+
+    /* ─── TRENDS ─────────────────────────────────────────────────── */
+    .trends-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .trend-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .trend-number {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .trend-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .trend-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ─── NOTABLE EVENTS ─────────────────────────────────────────── */
+    .event-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent2);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+    .event-card h4 { font-size: 15px; font-weight: 600; color: #fff; }
+    .event-card p  { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+    .event-card .event-date { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ─── METHODOLOGY ────────────────────────────────────────────── */
+    .methodology {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    .methodology strong { color: var(--text); }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 50px;
+    }
+
+    @media (max-width: 600px) {
+      .card h3 { font-size: 17px; }
+      .header { padding: 24px 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-badge">Radar Gastronómico</div>
+  <h1>Inteligencia de Mercado · Sierra Norte Ecuador</h1>
+  <p class="header-sub">Aperturas, tendencias y movimientos relevantes del sector restaurantero</p>
+  <div class="header-meta">
+    <span>Período analizado: <strong>Ene – Jun 2026</strong></span>
+    <span>Publicado: <strong>18 junio 2026</strong></span>
+    <span>Cobertura: <strong>Quito · Ibarra · Tulcán y área</strong></span>
+    <span>Preparado para: <strong>Javier Villarreal</strong></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN 1: APERTURAS VERIFICADAS
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <div class="dot"></div>
+    <h2>Aperturas verificadas — 2026</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- CARD 1: Sin Cuernos -->
+    <div class="card">
+      <span class="card-status status-confirmed">Confirmado</span>
+      <div class="card-city">Quito · La Carolina</div>
+      <h3>Sin Cuernos</h3>
+      <p class="card-concept">Hamburguesas premium · Fast food artesanal</p>
+
+      <div class="card-section-label">Apertura</div>
+      <p class="card-text">24–25 de abril de 2026. Evento de lanzamiento con 1.000 hamburguesas gratuitas (500/día).</p>
+
+      <div class="card-section-label">Ubicación</div>
+      <p class="card-text">Av. Portugal y República del Salvador, norte de Quito.</p>
+
+      <div class="card-section-label">Factor diferenciador</div>
+      <p class="card-text">Propuesta de fast food premium con carne 100% real, sin aditivos ni rellenos. Modelo de personalización total: el cliente construye su hamburguesa eligiendo ingredientes y combinaciones. Campaña "La era del Sin" (sin filtros, sin excusas, sin engaños) apuesta por autenticidad frente al mercado de hamburguesas de cadena.</p>
+
+      <div class="card-section-label">Ventaja competitiva</div>
+      <div class="tags">
+        <span class="tag">Carne 100% real</span>
+        <span class="tag green">Personalización total</span>
+        <span class="tag orange">Posicionamiento anti-cadena</span>
+        <span class="tag purple">Lanzamiento viral</span>
+      </div>
+
+      <div class="card-section-label">Segmento objetivo</div>
+      <p class="card-text">Consumidor urbano joven (20–40 años), con poder adquisitivo medio-alto, sensible a calidad de ingredientes y experiencia de marca auténtica.</p>
+
+      <hr class="card-divider">
+      <div class="card-footer">
+        <span class="price-range">Precio: No confirmado</span>
+        <a class="source-link" href="https://www.metroecuador.com.ec/empresarial/2026/04/20/hamburguesas-gratis-en-quito-apertura-de-sin-cuernos-regala-1000-unidades/" target="_blank">Metro Ecuador · abr 2026 ↗</a>
+      </div>
+    </div>
+
+    <!-- CARD 2: Montuvia (Cumbayá) -->
+    <div class="card">
+      <span class="card-status status-confirmed">Confirmado</span>
+      <div class="card-city">Quito · Cumbayá</div>
+      <h3>Montuvia Raíces Ancestrales</h3>
+      <p class="card-concept">Cocina manabita ancestral · Experiencia sensorial</p>
+
+      <div class="card-section-label">Apertura</div>
+      <p class="card-text">Agosto 2024 (Cumbayá). Mayo 2026: segunda sede abierta en Mall del Alto, Cuenca. Cobertura mediática activa en 2026.</p>
+
+      <div class="card-section-label">Ubicación</div>
+      <p class="card-text">Cumbayá, Quito (sede principal). Chef Valentina Álvarez y Sebastián Revelli, especialistas en técnicas de horno manabita.</p>
+
+      <div class="card-section-label">Factor diferenciador</div>
+      <p class="card-text">Recorrido sensorial de tres ambientes (montaña → mar → cocina) que reproduce la memoria culinaria costera. Horno manabita artesanal visible en sala. Tonga reinterpretada con magré de pato. Coctelería con currincho (aguardiente destilado tres veces). Fusión de técnica ancestral costeña en contexto urbano serrano.</p>
+
+      <div class="card-section-label">Ventaja competitiva</div>
+      <div class="tags">
+        <span class="tag">Horno manabita en sala</span>
+        <span class="tag green">Identidad regional única</span>
+        <span class="tag purple">Narración gastronómica</span>
+        <span class="tag orange">Expansión verificada</span>
+      </div>
+
+      <div class="card-section-label">Segmento objetivo</div>
+      <p class="card-text">Consumidor premium urbano con interés en cocina ecuatoriana de autor; segmento experiencial (30–55 años). Potencial turístico.</p>
+
+      <hr class="card-divider">
+      <div class="card-footer">
+        <span class="price-range">Precio: Segmento alto</span>
+        <a class="source-link" href="https://www.expreso.ec/buenavida/montuvia-un-restaurante-que-reinventa-lo-ancestral-con-giros-contemporaneos-273663.html" target="_blank">Diario Expreso · feb 2026 ↗</a>
+      </div>
+    </div>
+
+  </div><!-- /cards-grid aperturas -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN 2: MOVIMIENTOS NOTABLES (no aperturas nuevas)
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <div class="dot"></div>
+    <h2>Movimientos estratégicos notables — Quito 2026</h2>
+    <div class="line"></div>
+  </div>
+  <p style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">
+    Los siguientes no son aperturas nuevas, pero representan movimientos competitivos que alteran el mapa del sector en la Sierra Norte.
+  </p>
+
+  <div class="cards-grid">
+
+    <!-- CARD: Tributo -->
+    <div class="card">
+      <span class="card-status status-notable">Hito 2026</span>
+      <div class="card-city">Quito · Polanco</div>
+      <h3>Tributo</h3>
+      <p class="card-concept">Cocina andina · Aprovechamiento animal · Carnes</p>
+
+      <div class="card-section-label">Hito relevante</div>
+      <p class="card-text">En 2026 el restaurante alcanzó el <strong>puesto #24 mundial</strong> en el ranking "World's 101 Best Steak Restaurants" — subiendo desde el #30 en 2025. Segundo mejor de Latinoamérica (tras Fogón de Buenos Aires #22). Referencia directa de benchmarking competitivo para el sector.</p>
+
+      <div class="card-section-label">Propuesta diferenciadora</div>
+      <p class="card-text">Eje en "vaca vieja de los Andes" (ganado lechero criado a +2.800 msnm). Cocina de aprovechamiento total del animal, no de cortes estándar. Chef Luis Maldonado. Usa carne de la empresa pública de Rastro de Quito.</p>
+
+      <div class="card-section-label">Ventaja competitiva</div>
+      <div class="tags">
+        <span class="tag">Ranking mundial top 25</span>
+        <span class="tag green">Trazabilidad andina</span>
+        <span class="tag orange">Respaldo institucional público</span>
+      </div>
+
+      <hr class="card-divider">
+      <div class="card-footer">
+        <span class="price-range">Segmento alto</span>
+        <a class="source-link" href="https://www.primicias.ec/entretenimiento/gastronomia/restaurante-tributo-mejores-carnes-mundo-quito-ecuador-ranking-beststeak2026-119895/" target="_blank">Primicias · 2026 ↗</a>
+      </div>
+    </div>
+
+    <!-- CARD: Somos -->
+    <div class="card">
+      <span class="card-status status-notable">Nuevo Menú</span>
+      <div class="card-city">Quito · La Carolina</div>
+      <h3>Somos</h3>
+      <p class="card-concept">Cocina ecuatoriana de autor · 4 regiones</p>
+
+      <div class="card-section-label">Movimiento 2026</div>
+      <p class="card-text">Lanzó menú degustación <strong>"Recorrido"</strong> (9 tiempos, USD 120) en febrero 2026. Chef Alejandra Espinoza — Embajadora ONU para Turismo Gastronómico (2024). Restaurante en lista <em>The 50 Best Discovery</em>.</p>
+
+      <div class="card-section-label">Factor diferenciador</div>
+      <p class="card-text">Narrativa culinaria que recorre cuatro regiones del Ecuador en cada servicio. Vínculo con restaurante Cotoa (Miami, Guía Michelin 2025). Alta exposición internacional.</p>
+
+      <div class="card-section-label">Ventaja competitiva</div>
+      <div class="tags">
+        <span class="tag">50 Best Discovery</span>
+        <span class="tag purple">Cocina nacional premiada</span>
+        <span class="tag green">Menú degustación 9 tiempos</span>
+      </div>
+
+      <hr class="card-divider">
+      <div class="card-footer">
+        <span class="price-range">Degustación USD 120 / Almuerzo USD 35</span>
+        <a class="source-link" href="https://www.primicias.ec/entretenimiento/gastronomia/restaurantes-premiados-quito-menus-precios-pucara-gangotena-117510/" target="_blank">Primicias · mar 2026 ↗</a>
+      </div>
+    </div>
+
+    <!-- CARD: Pucará -->
+    <div class="card">
+      <span class="card-status status-notable">Nuevo Menú</span>
+      <div class="card-city">Quito · Cumbayá</div>
+      <h3>Pucará</h3>
+      <p class="card-concept">Cocina peruana · Restaurante de autor</p>
+
+      <div class="card-section-label">Movimiento 2026</div>
+      <p class="card-text">Recibió certificación <strong>Marca País Perú</strong> (PROMPERÚ) a inicios de 2026 y lanzó nuevo menú <strong>"Fusión de Orígenes"</strong>. Ganador Premios Summum 2025. Ubicado en Plaza Pampite, Cumbayá.</p>
+
+      <div class="card-section-label">Factor diferenciador</div>
+      <p class="card-text">Única certificación Marca País Perú en Quito actualmente. Menú accesible (platos para compartir) con foco en fidelización de clientes recurrentes, no solo ocasiones especiales.</p>
+
+      <div class="card-section-label">Ventaja competitiva</div>
+      <div class="tags">
+        <span class="tag">Marca País Perú</span>
+        <span class="tag orange">Premios Summum 2025</span>
+        <span class="tag gray">Precios competitivos</span>
+      </div>
+
+      <hr class="card-divider">
+      <div class="card-footer">
+        <span class="price-range">Causa frita $9.99 · Lomo XL $28.99</span>
+        <a class="source-link" href="https://www.primicias.ec/entretenimiento/gastronomia/restaurantes-premiados-quito-menus-precios-pucara-gangotena-117510/" target="_blank">Primicias · mar 2026 ↗</a>
+      </div>
+    </div>
+
+    <!-- CARD: Casa Gangotena -->
+    <div class="card">
+      <span class="card-status status-notable">Renovación</span>
+      <div class="card-city">Quito · Centro Histórico</div>
+      <h3>Casa Gangotena</h3>
+      <p class="card-concept">Cocina de vanguardia · Hotel boutique</p>
+
+      <div class="card-section-label">Movimiento 2026</div>
+      <p class="card-text">Renovación de menú en curso (chef José Tamayo). Nuevo foco: <strong>cocina sostenible</strong>, reducción de desperdicio, uso máximo de producto local. Reconocido por Guía Michelin entre mejores hoteles del mundo.</p>
+
+      <div class="card-section-label">Factor diferenciador</div>
+      <p class="card-text">Ubicación en Centro Histórico Patrimonio Mundial. Menú de postres completamente renovado con referencias geográficas ecuatorianas (Patate, Galápagos, San Juan). Alto componente experiencial turístico.</p>
+
+      <div class="card-section-label">Ventaja competitiva</div>
+      <div class="tags">
+        <span class="tag">Guía Michelin hotel</span>
+        <span class="tag green">Sostenibilidad culinaria</span>
+        <span class="tag purple">Posicionamiento turístico UNESCO</span>
+      </div>
+
+      <hr class="card-divider">
+      <div class="card-footer">
+        <span class="price-range">Postres USD 12–25 / plato principal +USD 25</span>
+        <a class="source-link" href="https://www.primicias.ec/entretenimiento/gastronomia/restaurantes-premiados-quito-menus-precios-pucara-gangotena-117510/" target="_blank">Primicias · mar 2026 ↗</a>
+      </div>
+    </div>
+
+  </div><!-- /cards-grid notables -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN 3: POR CONFIRMAR — Ibarra / Tulcán
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <div class="dot"></div>
+    <h2>Por confirmar — Ibarra · Tulcán</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- CARD: Chanul Ibarra -->
+    <div class="card">
+      <span class="card-status status-pending">Por confirmar</span>
+      <div class="card-city">Ibarra · Vía Romerillo Bajo</div>
+      <h3>Chanul Paseo Herencia</h3>
+      <p class="card-concept">Parrillada · Restobar · Cocina típica</p>
+
+      <div class="card-section-label">Estado</div>
+      <p class="card-text">Expansión de la marca Chanul (con sede establecida en Tulcán, Av. Manabí y Paraguay) hacia Ibarra. Se encontraron menciones en TikTok e Instagram activas, pero sin fecha verificada de apertura en medios de prensa formales.</p>
+
+      <div class="card-section-label">Fuente</div>
+      <p class="card-text">TikTok @micaelachanguan (video "Chanul Paseo Herencia: Nuevo Restaurante en Ibarra") + Instagram @chanul.ibarra. No confirmado por prensa.</p>
+
+      <div class="card-section-label">Relevancia para análisis</div>
+      <p class="card-text">Si se confirma, representaría la primera expansión de una marca local de la Sierra Norte (Carchi) hacia Imbabura. Marca Chanul ya establecida en Tulcán con reseñas en TripAdvisor.</p>
+
+      <div class="card-section-label">Ventaja competitiva potencial</div>
+      <div class="tags">
+        <span class="tag gray">Marca local reconocida</span>
+        <span class="tag orange">Expansión regional</span>
+      </div>
+
+      <hr class="card-divider">
+      <div class="card-footer">
+        <span class="price-range">Segmento medio</span>
+        <a class="source-link" href="https://chanul.com.ec/" target="_blank">chanul.com.ec ↗</a>
+      </div>
+    </div>
+
+    <!-- CARD: Tulcán sin novedades -->
+    <div class="no-data-card">
+      <strong>Tulcán – Carchi: sin aperturas verificadas (Ene–Jun 2026)</strong>
+      <p style="margin-top:10px;">La búsqueda sistemática en medios de prensa (El Comercio, La Hora, Primicias, El Telégrafo, Teleamazonas, Metro Ecuador), TripAdvisor y directorios locales no arrojó resultados confirmados de nuevas aperturas de restaurantes en la provincia de Carchi durante el período analizado.</p>
+      <p style="margin-top:10px;">Los establecimientos activos con mayor visibilidad en Tulcán según TripAdvisor incluyen: Chanul Restobar, Picantería Los Pastos, Kape. Ninguno es apertura nueva en 2026.</p>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN 4: EVENTOS GASTRONÓMICOS DE IMPACTO
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <div class="dot"></div>
+    <h2>Eventos gastronómicos relevantes — Jun 2026</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="event-card">
+    <span class="event-date">12–21 Junio 2026 · Activo ahora</span>
+    <h4>Tapeando Quito — Ruta gastronómica española</h4>
+    <p>41 restaurantes y bares de Quito participan en experiencia de tapas impulsada por la Embajada de España. Sectores cubiertos: La Floresta, La Carolina, Cumbayá, Bellavista, Puembo, Mitad del Mundo. Precios máximos: tapa sola USD 5.00 / tapa + bebida USD 8.00. Auspiciada por Estrella Damm y Air Europa. Relevante como indicador de densidad y diversidad del ecosistema gastronómico de Quito. <a class="source-link" href="https://www.primicias.ec/entretenimiento/gastronomia/tapeando-quito-ruta-gastronomica-espana-restaurantes-bares-embajada-ecuador-124830/" target="_blank">Fuente: Primicias ↗</a></p>
+  </div>
+
+  <div class="event-card">
+    <span class="event-date">Ene 2026 · Madrid Fusión</span>
+    <h4>Quito en Madrid Fusión 2026</h4>
+    <p>Quito participó en el congreso gastronómico Madrid Fusión (26–28 enero, IFEMA), uno de los foros más influyentes del sector a nivel mundial. Quito ocupa el puesto #2 del "Índice de Autenticidad Gastronómica Global" (1.3 millones de reseñas en Google Maps, 140+ ciudades evaluadas). El alcalde Pabel Muñoz propuso declarar 2026 como el "Año de la Gastronomía Quiteña". <a class="source-link" href="https://www.quitoinforma.gob.ec/2026/01/30/quito-el-destino-gastronomico-cultural-y-natural-de-este-2026/" target="_blank">Fuente: Quito Informa ↗</a></p>
+  </div>
+
+  <div class="event-card">
+    <span class="event-date">Sep 2026 · Próximo</span>
+    <h4>EXPO HORECA Quito — 26–27 septiembre</h4>
+    <p>Feria sectorial de hospitalidad, restaurantes y catering. Centro de Exposiciones Quito. Será un barómetro del estado del sector y punto de identificación de nuevas aperturas para el segundo semestre 2026. <a class="source-link" href="https://expoceq.ec/eventos/expo-horeca/" target="_blank">Fuente: EXPOCEQ ↗</a></p>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIÓN 5: TENDENCIAS DEL PERÍODO
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <div class="dot"></div>
+    <h2>Tendencias del período — Sierra Norte Ecuador</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="trends-grid">
+
+    <div class="trend-card">
+      <div class="trend-number">01</div>
+      <div class="trend-title">Cocina ancestral regionalizada como propuesta premium</div>
+      <div class="trend-desc">Montuvia (manabita en Quito) y Casa Gangotena (sostenibilidad andina) evidencian que rescatar técnicas originarias —horno de barro, productos endémicos— en contexto urbano serrano es la propuesta con mayor diferenciación actualmente. La escasez de replicabilidad de estas técnicas constituye una barrera de entrada alta.</div>
+    </div>
+
+    <div class="trend-card">
+      <div class="trend-number">02</div>
+      <div class="trend-title">Fast food premium con narrativa anti-industrial</div>
+      <div class="trend-desc">Sin Cuernos inaugura con el argumento de autenticidad del producto frente a cadenas de comida rápida. Tendencia que replica un segmento consolidado en mercados como México y Colombia. La personalización del producto como elemento diferenciador gana terreno frente al menú estándar.</div>
+    </div>
+
+    <div class="trend-card">
+      <div class="trend-number">03</div>
+      <div class="trend-title">Expansión de marcas locales hacia otras ciudades</div>
+      <div class="trend-desc">Chanul (Tulcán) abre en Ibarra. Montuvia (Quito/Cumbayá) abre en Cuenca. Las marcas que construyeron identidad sólida en su mercado de origen están ejecutando expansión geográfica intraregional. Señal de maduración del mercado gastronómico serrano.</div>
+    </div>
+
+    <div class="trend-card">
+      <div class="trend-number">04</div>
+      <div class="trend-title">Posicionamiento internacional de restaurantes quiteños</div>
+      <div class="trend-desc">Tributo en top 25 mundial de carnes; Somos en 50 Best Discovery; Cotoa (extensión de Somos) en Guía Michelin Florida. Quito en #2 de índice global de autenticidad gastronómica. Este reconocimiento externo retroalimenta demanda interna y turística.</div>
+    </div>
+
+    <div class="trend-card">
+      <div class="trend-number">05</div>
+      <div class="trend-title">Cocina sostenible como eje estratégico 2026</div>
+      <div class="trend-desc">Casa Gangotena declara la sostenibilidad como objetivo primario del año. Manabí fue designada Región Gastronómica Mundial 2026 (IGCAT). La trazabilidad y el aprovechamiento total del producto se consolidan como exigencias del segmento premium, no como opcionales.</div>
+    </div>
+
+    <div class="trend-card">
+      <div class="trend-number">06</div>
+      <div class="trend-title">Asimetría de desarrollo Quito vs. ciudades intermedias</div>
+      <div class="trend-desc">No se identificaron aperturas verificadas en Tulcán o Ibarra durante el período. El flujo de innovación gastronómica sigue concentrado en Quito y su área metropolitana (Cumbayá). Las ciudades de la Sierra Norte presentan mercado subatendido en el segmento diferenciado, lo que representa oportunidad de primer entrante.</div>
+    </div>
+
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NOTA METODOLÓGICA
+  ════════════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <div class="dot"></div>
+    <h2>Nota metodológica</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="methodology">
+    <p><strong>Fuentes consultadas:</strong> Metro Ecuador, Primicias, Diario Expreso, La Hora, El Telégrafo, Teleamazonas, Quito Informa, Quito Turismo, TripAdvisor, EXPOCEQ. Búsquedas realizadas con términos: "nuevo restaurante apertura Quito/Ibarra/Tulcán 2026", "apertura gastronómica sierra Ecuador 2026", "restaurante inauguración Quito 2026".</p>
+    <p style="margin-top:10px;"><strong>Criterios de clasificación:</strong> "Confirmado" = apertura reportada por al menos un medio de prensa registrado con fecha específica. "Por confirmar" = presencia en redes sociales sin cobertura de prensa. "Notable" = establecimiento existente con movimiento estratégico significativo en 2026.</p>
+    <p style="margin-top:10px;"><strong>Limitaciones:</strong> Las búsquedas no acceden a contenido detrás de paywall ni a redes sociales privadas. Es probable que existan aperturas menores en Ibarra y Tulcán no cubiertas por medios nacionales. Para mayor precisión en esas ciudades se recomienda monitoreo de prensa local (Diario del Norte, La Verdad) o verificación directa en campo.</p>
+    <p style="margin-top:10px;"><strong>Fecha de extracción de datos:</strong> 18 de junio de 2026.</p>
+  </div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  Reporte generado automáticamente · Radar Gastronómico Sierra Norte Ecuador · 18 Jun 2026<br>
+  Preparado para Javier Villarreal · Docente UPEC · Consultor Empresarial Tulcán
+</div>
+
+</body>
+</html>

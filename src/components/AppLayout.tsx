@@ -24,8 +24,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("Usuario");
   const [unreadAlerts, setUnreadAlerts] = useState(0);
-  const { patients, currentPatient, currentFamilyId, switchPatient } = usePatient();
-
+  const { patients, currentPatient, currentPatientId, currentFamilyId, switchPatient } = usePatient();
+  
   useEffect(() => {
     const loadData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -33,19 +33,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       
       setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "Usuario");
 
-      if (currentFamilyId) {
-        // Cargar alertas no leídas
+      if (currentFamilyId && currentPatientId) {
+        // Cargar alertas no leídas de este paciente específico
         const { count } = await supabase
           .from("alertas")
           .select("id", { count: 'exact', head: true })
           .eq("familia_id", currentFamilyId)
-          .eq("leida", false);
+          .eq("persona_autismo_id", currentPatientId)
+          .or(`leida_por.is.null,not.leida_por.cs.{"${user.id}"}`);
         
         setUnreadAlerts(count || 0);
+      } else {
+        setUnreadAlerts(0);
       }
     };
     loadData();
-  }, [currentFamilyId]);
+  }, [currentFamilyId, currentPatientId]);
 
   const childName = currentPatient ? currentPatient.name : "SIN PERFIL";
   
