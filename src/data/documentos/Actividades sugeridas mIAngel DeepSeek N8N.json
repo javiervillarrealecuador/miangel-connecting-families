@@ -1,0 +1,294 @@
+{
+  "name": "Actividades sugeridas mIAngel (DeepSeek)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/actividades-sugerir",
+        "responseMode": "lastNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -256,
+        -16
+      ],
+      "id": "1c3c48d1-3b58-460c-9066-bbdfc1bb6481",
+      "name": "Webhook",
+      "webhookId": "d301ac5d-0933-4370-a75a-dffcd516d451"
+    },
+    {
+      "parameters": {
+        "url": "=https://yxngkkfhupkmzmokyigh.supabase.co/rest/v1/personas_autismo?id=eq.{{ $('Webhook').item.json.body.child_id }}&select=*",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bmdra2ZodXBrbXptb2t5aWdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcwNzgzNywiZXhwIjoyMDkzMjgzODM3fQ.rlwfmruCjEXw0ABU9aQbAYTClUpSyli7O2fTxL17YL8"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bmdra2ZodXBrbXptb2t5aWdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcwNzgzNywiZXhwIjoyMDkzMjgzODM3fQ.rlwfmruCjEXw0ABU9aQbAYTClUpSyli7O2fTxL17YL8"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        -16
+      ],
+      "id": "89bd4dbb-9a53-4ed2-8a06-2597327d6cf5",
+      "name": "Consulta perfil paciente"
+    },
+    {
+      "parameters": {
+        "url": "=https://yxngkkfhupkmzmokyigh.supabase.co/rest/v1/pai_goals?persona_autismo_id=eq.{{ $('Webhook').item.json.body.child_id }}&select=*",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bmdra2ZodXBrbXptb2t5aWdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcwNzgzNywiZXhwIjoyMDkzMjgzODM3fQ.rlwfmruCjEXw0ABU9aQbAYTClUpSyli7O2fTxL17YL8"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bmdra2ZodXBrbXptb2t5aWdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcwNzgzNywiZXhwIjoyMDkzMjgzODM3fQ.rlwfmruCjEXw0ABU9aQbAYTClUpSyli7O2fTxL17YL8"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        96,
+        -16
+      ],
+      "id": "dab0ff3b-7a40-452f-a4a5-c7377d478a09",
+      "name": "Consulta objetivos paciente"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepseek.com/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sk-868f51fdec7d47e49ecc10013f4b66fb"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"deepseek-chat\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Eres un especialista en autismo. Recomienda 3 actividades terapeuticas para un nino con estos objetivos PAI. Responde en JSON con formato: {\\\"recomendaciones\\\": [{\\\"nombre\\\", \\\"descripcion\\\", \\\"razon\\\", \\\"pasos\\\", \\\"duracion_estimada_minutos\\\"}]}. El objetivo principal a trabajar es: '{{ $('Webhook').item.json.body.objetivo_titulo }}'. Todos los objetivos activos del nino son: {{ $items('Consulta objetivos paciente').map(item => item.json.title).join(', ') }}. Contexto actual donde se halla el niño: '{{ $('Webhook').item.json.body.contexto }}'. Proporciona pasos claros de implementación y duración aproximada.\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 2000\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "0726e03c-18fb-4ffb-b277-9fa6a3a85127",
+      "name": "Construye recomendaciones"
+    },
+    {
+      "parameters": {
+        "jsCode": "// DeepSeek API devuelve la respuesta en choices[0].message.content\nconst responseText = $json.choices[0].message.content;\nconst cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();\nconst parsed = JSON.parse(cleanText);\n\nconst webhookData = $('Webhook').item.json.body;\nconst perfilData = $('Consulta perfil paciente').item.json;\n\nreturn parsed.recomendaciones.map(rec => ({\n  json: {\n    nombre: rec.nombre,\n    descripcion: rec.descripcion,\n    instrucciones: Array.isArray(rec.pasos) ? rec.pasos.join('\\n') : rec.pasos,\n    duracion_estimada_minutos: rec.duracion_estimada_minutos || 15,\n    origen: 'generada_ia',\n    activa: true,\n    persona_autismo_id: webhookData.child_id,\n    familia_id: perfilData.familia_id,\n    pai_goal_id: webhookData.objetivo_id,\n    aiReasoning: rec.razon\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -16
+      ],
+      "id": "30914108-4236-444c-b42c-18c49e408a4a",
+      "name": "Parsear Respuesta Gemini"
+    },
+    {
+      "parameters": {
+        "tableId": "actividades_sugeridas",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "familia_id",
+              "fieldValue": "={{ $json.familia_id }}"
+            },
+            {
+              "fieldId": "persona_autismo_id",
+              "fieldValue": "={{ $json.persona_autismo_id }}"
+            },
+            {
+              "fieldId": "pai_goal_id",
+              "fieldValue": "={{ $json.pai_goal_id }}"
+            },
+            {
+              "fieldId": "nombre",
+              "fieldValue": "={{ $json.nombre }}"
+            },
+            {
+              "fieldId": "descripcion",
+              "fieldValue": "={{ $json.descripcion }}"
+            },
+            {
+              "fieldId": "instrucciones",
+              "fieldValue": "={{ $json.instrucciones }}"
+            },
+            {
+              "fieldId": "duracion_estimada_minutos",
+              "fieldValue": "={{ $json.duracion_estimada_minutos }}"
+            },
+            {
+              "fieldId": "origen",
+              "fieldValue": "={{ $json.origen }}"
+            },
+            {
+              "fieldId": "activa",
+              "fieldValue": "={{ $json.activa }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -16
+      ],
+      "id": "879dbca9-feb6-438a-98bd-4bf17450cc5d",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "mqQAR7rX3XIzUQZM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener todos los objetivos recibidos (los 3 items)\nconst items = $input.all();\n\n// Unir los títulos de los objetivos en una sola frase separada por comas\nconst listaObjetivos = items.map(item => item.json.title).join(\", \");\n\n// Retornar un ÚNICO item consolidado para que Gemini solo se ejecute 1 vez\nreturn [{\n  json: {\n    contexto: $('Webhook').item.json.body.contexto,\n    objetivos: listaObjetivos\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -16
+      ],
+      "id": "efcda405-ab97-4a47-9f1f-04d67c17985d",
+      "name": "Unificar objetivos"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "recomendaciones",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "c1a35531-63cf-4d88-8f7c-6c8c0fabf558",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Consulta perfil paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta perfil paciente": {
+      "main": [
+        [
+          {
+            "node": "Consulta objetivos paciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta objetivos paciente": {
+      "main": [
+        [
+          {
+            "node": "Unificar objetivos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construye recomendaciones": {
+      "main": [
+        [
+          {
+            "node": "Parsear Respuesta Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear Respuesta Gemini": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unificar objetivos": {
+      "main": [
+        [
+          {
+            "node": "Construye recomendaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "603aa4179c90dd2c93eac40ef69f1603502868b080580a4ca9a820c516007e77"
+  }
+}
