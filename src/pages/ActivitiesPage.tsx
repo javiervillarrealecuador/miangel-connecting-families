@@ -85,20 +85,6 @@ export default function ActivitiesPage() {
   };
 
   // -------------------------------------------------------------------
-  // Helpers – webhook URLs (dev proxy aware)
-  // -------------------------------------------------------------------
-  const getWebhookUrl = (type: "test" | "production") => {
-    const baseUrl = import.meta.env.VITE_N8N_WEBHOOK_URL || "";
-    if (baseUrl && !baseUrl.includes("localhost") && !baseUrl.includes("127.0.0.1")) {
-      const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-      return type === "test"
-        ? `${cleanBase}/webhook-test/actividades-sugerir`
-        : `${cleanBase}/webhook/actividades-sugerir`;
-    }
-    return type === "test" ? "/n8n/webhook-test/actividades-sugerir" : "/n8n/webhook/actividades-sugerir";
-  };
-
-  // -------------------------------------------------------------------
   // UI flow helpers
   // -------------------------------------------------------------------
   const goToGoalSelection = () => {
@@ -168,7 +154,7 @@ export default function ActivitiesPage() {
   };
 
   // -------------------------------------------------------------------
-  // Interaction with n8n – generate activity list
+  // Interaction with backend – generate activity list (Código Nativo DeepSeek)
   // -------------------------------------------------------------------
   const handleSearch = async () => {
     if (!selectedGoal) {
@@ -190,35 +176,25 @@ export default function ActivitiesPage() {
         child_id: currentPatientId,
         user_id: userId,
       };
-      const testUrl = getWebhookUrl("test");
-      let response = await fetch(testUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }).catch(() => null);
-      if (!response || response.status === 404) {
-        const prodUrl = getWebhookUrl("production");
-        response = await fetch(prodUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-      if (!response.ok) throw new Error(`n8n respondió con ${response.status}`);
-      const data = await response.json();
+
+      const { data, error } = await supabase.functions.invoke("generate-activities", {
+        body: payload,
+      });
+      if (error) throw error;
+
       setRawN8nData(data);
       
       const parsed = parseActivities(data);
       setResults(parsed);
-      toast.success("¡Estrategias generadas con IA!");
+      toast.success("¡Estrategias generadas con Código Nativo (DeepSeek)!");
     } catch (e: any) {
       console.error(e);
-      toast.error(`Error al conectar con n8n: ${e.message || e}`);
+      toast.error(`Error al generar actividades: ${e.message || e}`);
       setResults([
         {
           id: "fallback",
-          nombre: "Error de Conexión",
-          descripcion: "No se pudo conectar a n8n. Verifica el flujo o genera con IA.",
+          nombre: "Error de Generación",
+          descripcion: "No se pudo generar con Código Nativo (DeepSeek). Verifica la configuración.",
           pasos: [],
           isRecommended: false,
         },
@@ -454,6 +430,7 @@ export default function ActivitiesPage() {
                 )}
               </button>
             </div>
+
             <Button
               className="mt-6 h-16 w-full btn-touch rounded-3xl bg-primary text-xl font-black shadow-xl shadow-primary/20"
               onClick={handleSearch}
@@ -501,7 +478,9 @@ export default function ActivitiesPage() {
                 <Sparkles size={22} />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-0.5">Estrategias generadas</p>
+                <p className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-0.5">
+                  Estrategias generadas
+                </p>
                 <p className="text-sm text-foreground/80 leading-snug">
                   <strong>{results.length} actividad{results.length !== 1 && "es"}</strong> para <strong>{query}</strong>
                   {selectedGoal && !selectedGoal._sinObjetivo && <> — {selectedGoal.title}</>}
@@ -691,11 +670,11 @@ export default function ActivitiesPage() {
             <div className="mt-6 p-4 bg-muted/30 border-2 border-dashed border-muted rounded-[2rem]">
               <details className="cursor-pointer group">
                 <summary className="font-bold text-sm text-muted-foreground select-none flex items-center gap-2 hover:text-primary transition-colors">
-                  🔍 Depuración de Conexión n8n
+                  🔍 Depuración de Conexión IA (DeepSeek)
                 </summary>
                 <div className="space-y-4 mt-4 text-left">
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground mb-2">Respuesta cruda recibida de n8n:</p>
+                    <p className="text-xs font-bold text-muted-foreground mb-2">Respuesta cruda recibida de Edge Function:</p>
                     <pre className="p-4 bg-card border-2 text-xs rounded-2xl overflow-x-auto max-h-60 shadow-inner font-mono text-foreground">
                       {JSON.stringify(rawN8nData, null, 2) || "No se ha recibido respuesta aún (o error)."}
                     </pre>
